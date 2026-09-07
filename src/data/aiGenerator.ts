@@ -1,4 +1,5 @@
 import { ResumeData, CvTemplate, SkillItem, ExperienceItem, EducationItem, ProjectItem, CertificationItem } from '../types/cv';
+import { findCountryByName, getRandomCountry, ALL_COUNTRIES } from './countriesData';
 
 export interface CountryOption {
   code: string;
@@ -483,7 +484,28 @@ function getRandomItem<T>(arr: T[]): T {
  * country-localized, employment-status-adapted, and age-calibrated professional resume.
  */
 export function generateTailoredAiResume(input: AiGeneratorInput): ResumeData {
-  const countryData = COUNTRIES.find(c => c.name === input.country) || COUNTRIES[0];
+  // Support all 250+ countries and territories
+  const fullInfo = findCountryByName(input.country);
+  const countryName = fullInfo ? fullInfo.name : input.country;
+  const phonePrefix = fullInfo?.phonePrefix || '+1';
+  const cities = fullInfo?.majorCities && fullInfo.majorCities.length > 0
+    ? fullInfo.majorCities
+    : (fullInfo?.capital ? [fullInfo.capital] : ['Central District', 'Capital City']);
+  const universities = fullInfo?.universities && fullInfo.universities.length > 0
+    ? fullInfo.universities
+    : [`National University of ${countryName}`, `Institute of Technology (${countryName})`];
+  const companies = fullInfo?.companies && fullInfo.companies.length > 0
+    ? fullInfo.companies
+    : [`${countryName} Premier Enterprise`, 'Apex Global Solutions', 'Vanguard Systems'];
+
+  const countryData = {
+    code: fullInfo?.alpha2 || 'US',
+    name: countryName,
+    phonePrefix,
+    cities,
+    universities,
+    companies
+  };
   const ageGroupData = AGE_GROUPS.find(a => a.id === input.ageGroup) || AGE_GROUPS[1];
   const employmentStatusData = EMPLOYMENT_STATUSES.find(e => e.id === input.employmentStatus) || EMPLOYMENT_STATUSES[1];
 

@@ -14,6 +14,8 @@ import { ResponsiveCvPreview } from '../components/common/ResponsiveCvPreview';
 import { exportCvToPdf, exportCvToJson, exportCvToTxt, printCv } from '../utils/pdfExport';
 import { saveDraftToStorage, saveResumeToList } from '../utils/storage';
 import { calculateResumeStrength } from '../utils/completion';
+import { CountrySelector } from '../components/robotic/CountrySelector';
+import { findCountryByName } from '../data/countriesData';
 import { 
   User, 
   Briefcase, 
@@ -762,13 +764,51 @@ export const CreatePage: React.FC<CreatePageProps> = ({ initialCv, onNavigate })
                   />
                 </div>
 
-                <div className="sm:col-span-2">
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Location</label>
+                {/* Country / Territory */}
+                <div className="sm:col-span-1">
+                  <CountrySelector
+                    label="Country / Territory"
+                    value={cv.personalInfo.country || ''}
+                    onChange={(countryName) => {
+                      const cInfo = findCountryByName(countryName);
+                      setCv(prev => {
+                        let newLoc = prev.personalInfo.location;
+                        let newPhone = prev.personalInfo.phone;
+                        if (!newLoc && cInfo?.capital) {
+                          newLoc = `${cInfo.capital}, ${countryName}`;
+                        } else if (newLoc && !newLoc.includes(countryName) && cInfo?.capital) {
+                          newLoc = `${newLoc.split(',')[0].trim()}, ${countryName}`;
+                        }
+                        if (!newPhone && cInfo?.phonePrefix) {
+                          newPhone = `${cInfo.phonePrefix} `;
+                        }
+                        return {
+                          ...prev,
+                          personalInfo: {
+                            ...prev.personalInfo,
+                            country: countryName,
+                            location: newLoc,
+                            phone: newPhone
+                          },
+                          updatedAt: Date.now()
+                        };
+                      });
+                    }}
+                    showRandomButton={true}
+                    id="create-cv-country"
+                  />
+                </div>
+
+                {/* City, State / Region */}
+                <div className="sm:col-span-1">
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    City, State / Region
+                  </label>
                   <input
                     type="text"
                     value={cv.personalInfo.location}
                     onChange={(e) => updatePersonalInfo('location', e.target.value)}
-                    placeholder="City, State or Country"
+                    placeholder="e.g. Austin, TX or London"
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                     id="input-location"
                   />

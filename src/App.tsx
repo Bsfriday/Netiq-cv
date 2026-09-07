@@ -13,6 +13,7 @@ import { CreatePage } from './pages/CreatePage';
 import { SamplesPage } from './pages/SamplesPage';
 import { SavedPage } from './pages/SavedPage';
 import { AiGeneratorPage } from './pages/AiGeneratorPage';
+import { RoboticResumePage } from './pages/RoboticResumePage';
 import { ReviewPromptModal } from './components/common/ReviewPromptModal';
 import { UserReview } from './utils/reviewStorage';
 
@@ -20,11 +21,11 @@ export default function App() {
   // Simple, robust client-side routing supporting both pathname and hash
   const getInitialRoute = (): string => {
     const hash = window.location.hash.replace('#', '');
-    if (hash && ['/create', '/random', '/samples', '/saved', '/ai-generator'].includes(hash)) {
+    if (hash && ['/create', '/random', '/samples', '/saved', '/ai-generator', '/robotic-resume'].includes(hash)) {
       return hash;
     }
     const path = window.location.pathname;
-    if (['/create', '/random', '/samples', '/saved', '/ai-generator'].includes(path)) {
+    if (['/create', '/random', '/samples', '/saved', '/ai-generator', '/robotic-resume'].includes(path)) {
       return path;
     }
     return '/';
@@ -125,6 +126,13 @@ export default function App() {
           onNavigate={navigateTo}
           onGenerateRandom={handleGenerateRandom}
           onCreateNew={handleCreateMyCv}
+        />
+      )}
+
+      {currentRoute === '/robotic-resume' && (
+        <RoboticResumePage 
+          onEditCv={handleEditCvInBuilder}
+          onNavigate={navigateTo}
         />
       )}
 

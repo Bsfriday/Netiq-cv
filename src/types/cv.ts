@@ -4,6 +4,7 @@ export interface PersonalInfo {
   email: string;
   phone: string;
   location: string;
+  country?: string;
   website?: string;
   linkedin?: string;
   github?: string;
@@ -67,14 +68,18 @@ export type CvTemplate =
   | 'professional' 
   | 'executive' 
   | 'creative' 
-  | 'compact';
+  | 'compact'
+  | 'technical';
 
-export type CvFont = 'sans' | 'serif';
+export type CvFont = 'sans' | 'serif' | 'mono' | 'grotesk' | 'classic' | 'modern';
+
+export type CvFontSize = 'sm' | 'md' | 'lg' | 'xl';
 
 export interface ThemeConfig {
   template: CvTemplate;
   accentColor: string;
   font: CvFont;
+  fontSize?: CvFontSize;
   spacing: 'compact' | 'normal' | 'spacious';
 }
 

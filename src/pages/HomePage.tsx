@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, PlusCircle, ArrowRight, Compass, FileText, CheckCircle2, ShieldCheck, Zap } from 'lucide-react';
+import { Sparkles, PlusCircle, ArrowRight, Compass, FileText, CheckCircle2, ShieldCheck, Zap, Bot } from 'lucide-react';
 
 interface HomePageProps {
   onNavigate: (route: string) => void;
@@ -203,6 +203,16 @@ export const HomePage: React.FC<HomePageProps> = ({
 
       {/* Secondary Navigation Links */}
       <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+        <button
+          onClick={() => onNavigate('/robotic-resume')}
+          className="inline-flex items-center gap-2 text-xs font-semibold text-blue-700 hover:text-blue-800 py-2 px-4 rounded-xl bg-blue-50/90 hover:bg-blue-100 border border-blue-200 transition-all shadow-xs"
+          id="link-robotic-resume-home"
+        >
+          <Bot className="w-4 h-4 text-blue-600" />
+          <span>Robotic Resume: AI & ATS Studio</span>
+          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-blue-600 text-white font-bold">New</span>
+        </button>
+
         <button
           onClick={() => onNavigate('/samples')}
           className="inline-flex items-center gap-2 text-xs font-semibold text-slate-600 hover:text-blue-600 py-2 px-4 rounded-xl bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-200 transition-all shadow-xs"

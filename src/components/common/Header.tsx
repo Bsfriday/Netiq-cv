@@ -10,7 +10,8 @@ import {
   Star,
   PlusCircle,
   Zap,
-  ChevronRight
+  ChevronRight,
+  Bot
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -69,10 +70,17 @@ export const Header: React.FC<HeaderProps> = ({ currentRoute, onNavigate, savedC
       desc: 'Studio overview & quick start'
     },
     {
+      route: '/robotic-resume',
+      label: 'Robotic Resume',
+      icon: Bot,
+      badge: 'New AI',
+      desc: 'AI-optimized resumes for modern roles'
+    },
+    {
       route: '/ai-generator',
       label: 'AI Resume Generator',
       icon: Sparkles,
-      badge: 'New AI',
+      badge: 'AI',
       desc: 'Tailored by country, role & experience'
     },
     {
@@ -142,6 +150,20 @@ export const Header: React.FC<HeaderProps> = ({ currentRoute, onNavigate, savedC
               <span>Home</span>
             </button>
           )}
+
+          <button
+            onClick={() => onNavigate('/robotic-resume')}
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all ${
+              currentRoute === '/robotic-resume' 
+                ? 'bg-blue-50 text-blue-700 border border-blue-200/80 shadow-xs' 
+                : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'
+            }`}
+            id="nav-robotic-resume-btn"
+          >
+            <Bot className="w-4 h-4 text-blue-600" />
+            <span>Robotic Resume</span>
+            <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-blue-100 text-blue-700 font-bold">New</span>
+          </button>
 
           <button
             onClick={() => onNavigate('/ai-generator')}

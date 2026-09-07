@@ -27,7 +27,28 @@ export const CvRenderer: React.FC<CvRendererProps> = ({ data, scale = 1, isPrint
   const { personalInfo, summary, experience, education, skills, certifications, projects, themeConfig } = data;
   const accent = themeConfig?.accentColor || '#2563eb';
   const template = themeConfig?.template || 'modern';
-  const isSerif = themeConfig?.font === 'serif';
+  
+  // Dynamic font class mapping
+  const fontClass = 
+    themeConfig?.font === 'serif' ? 'font-cv-serif' :
+    themeConfig?.font === 'grotesk' ? 'font-cv-grotesk' :
+    themeConfig?.font === 'mono' ? 'font-cv-mono' :
+    themeConfig?.font === 'classic' ? 'font-cv-classic' :
+    themeConfig?.font === 'modern' ? 'font-cv-modern' :
+    'font-cv-sans';
+
+  // Dynamic font size scaling class mapping
+  const fontSizeClass = 
+    themeConfig?.fontSize === 'sm' ? 'cv-size-sm' :
+    themeConfig?.fontSize === 'lg' ? 'cv-size-lg' :
+    themeConfig?.fontSize === 'xl' ? 'cv-size-xl' :
+    'cv-size-md';
+
+  // Dynamic spacing padding
+  const paddingClass = 
+    themeConfig?.spacing === 'compact' ? 'p-6 sm:p-8' :
+    themeConfig?.spacing === 'spacious' ? 'p-9 sm:p-12' :
+    'p-8 sm:p-10';
 
   // Helper to format date strings like "2022-03" into "Mar 2022"
   const formatDate = (dateStr: string) => {
@@ -55,8 +76,8 @@ export const CvRenderer: React.FC<CvRendererProps> = ({ data, scale = 1, isPrint
 
   return (
     <div 
-      className={`cv-preview-sheet bg-white text-slate-800 transition-all ${isSerif ? 'font-serif' : 'font-sans'} ${
-        isPrint ? 'w-full' : 'w-[210mm] min-h-[297mm] shadow-2xl rounded-sm mx-auto p-8 sm:p-11'
+      className={`cv-preview-sheet bg-white text-slate-800 transition-all ${fontClass} ${fontSizeClass} ${
+        isPrint ? 'w-full' : `w-[210mm] min-h-[297mm] shadow-2xl rounded-sm mx-auto ${paddingClass}`
       }`}
       style={containerStyle}
       id="cv-printable-area"
@@ -966,6 +987,194 @@ export const CvRenderer: React.FC<CvRendererProps> = ({ data, scale = 1, isPrint
                 </h2>
                 <div className="text-[11px] text-slate-700 leading-normal font-medium">
                   {skills.map(s => s.name).join(', ')}
+                </div>
+              </section>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================ */}
+      {/* 8. TEMPLATE: TECHNICAL (AI, Data & Engineering Optimized)   */}
+      {/* ============================================================ */}
+      {template === 'technical' && (
+        <div className="space-y-4 font-sans text-slate-800">
+          {/* Header */}
+          <header className="border-b-2 pb-3.5" style={{ borderColor: accent }}>
+            <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-1.5">
+              <div>
+                <h1 className="text-2xl font-black tracking-tight text-slate-900 font-mono">
+                  {personalInfo.fullName || 'Candidate Name'}
+                </h1>
+                <p className="text-sm font-bold tracking-wide mt-0.5" style={{ color: accent }}>
+                  {personalInfo.jobTitle || 'Technical Specialist'}
+                </p>
+              </div>
+
+              {/* Quick Contacts */}
+              <div className="text-[11px] text-slate-600 font-mono sm:text-right space-y-0.5">
+                <div className="flex flex-wrap sm:justify-end gap-x-2 gap-y-0.5">
+                  {personalInfo.email && <span>{personalInfo.email}</span>}
+                  {personalInfo.phone && <span>• {personalInfo.phone}</span>}
+                  {personalInfo.location && <span>• {personalInfo.location}</span>}
+                </div>
+                <div className="flex flex-wrap sm:justify-end gap-x-2 gap-y-0.5 text-slate-500">
+                  {personalInfo.linkedin && <span>in: {personalInfo.linkedin.replace(/^https?:\/\/(www\.)?linkedin\.com\/in\//, '')}</span>}
+                  {personalInfo.github && <span>gh: {personalInfo.github.replace(/^https?:\/\/(www\.)?github\.com\//, '')}</span>}
+                  {personalInfo.website && <span>web: {personalInfo.website.replace(/^https?:\/\//, '')}</span>}
+                </div>
+              </div>
+            </div>
+          </header>
+
+          {/* Professional Summary */}
+          {summary && (
+            <section className="page-break-avoid">
+              <h2 className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-700 bg-slate-100 px-2 py-0.5 rounded-sm inline-block mb-1.5 border-l-2" style={{ borderLeftColor: accent }}>
+                Summary & Core Profile
+              </h2>
+              <p className="text-[11.5px] leading-relaxed text-slate-700">
+                {summary}
+              </p>
+            </section>
+          )}
+
+          {/* Technical Skills Matrix */}
+          {skills && skills.length > 0 && (
+            <section className="page-break-avoid">
+              <h2 className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-700 bg-slate-100 px-2 py-0.5 rounded-sm inline-block mb-1.5 border-l-2" style={{ borderLeftColor: accent }}>
+                Technical Skills & Tools
+              </h2>
+              <div className="flex flex-wrap gap-1.5">
+                {skills.map((s) => (
+                  <span
+                    key={s.id}
+                    className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-mono bg-slate-100 border border-slate-200/80 text-slate-800"
+                  >
+                    <span className="font-semibold">{s.name}</span>
+                    {s.level && (
+                      <span className="ml-1 text-[9.5px] text-slate-500">[{s.level}]</span>
+                    )}
+                  </span>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Work Experience */}
+          {experience && experience.length > 0 && (
+            <section className="space-y-3">
+              <h2 className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-700 bg-slate-100 px-2 py-0.5 rounded-sm inline-block border-l-2" style={{ borderLeftColor: accent }}>
+                Professional Experience
+              </h2>
+              <div className="space-y-3">
+                {experience.map((exp) => (
+                  <div key={exp.id} className="page-break-avoid pl-2 border-l border-slate-200">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between text-xs">
+                      <div>
+                        <span className="font-bold text-slate-900 text-[12.5px]">{exp.jobTitle}</span>
+                        <span className="text-slate-500 font-medium"> @ </span>
+                        <span className="font-semibold" style={{ color: accent }}>{exp.company}</span>
+                        {exp.location && <span className="text-slate-500 text-[11px]"> ({exp.location})</span>}
+                      </div>
+                      <span className="text-[10.5px] font-mono text-slate-500 mt-0.5 sm:mt-0 shrink-0">
+                        {formatDate(exp.startDate)} – {exp.current ? 'Present' : formatDate(exp.endDate)}
+                      </span>
+                    </div>
+
+                    {exp.description && (
+                      <div className="mt-1 text-[11.5px] text-slate-700 space-y-0.5 leading-relaxed">
+                        {exp.description.split('\n').map((line, lIdx) => {
+                          const trimmed = line.trim();
+                          if (!trimmed) return null;
+                          const isBullet = trimmed.startsWith('•') || trimmed.startsWith('-') || trimmed.startsWith('*');
+                          const clean = isBullet ? trimmed.replace(/^[•\-*]\s*/, '') : trimmed;
+                          return (
+                            <div key={lIdx} className="flex items-start gap-1.5">
+                              <span className="text-slate-400 font-mono text-[10px] mt-0.5">›</span>
+                              <span>{clean}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Key Projects */}
+          {projects && projects.length > 0 && (
+            <section className="space-y-2 page-break-avoid">
+              <h2 className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-700 bg-slate-100 px-2 py-0.5 rounded-sm inline-block border-l-2" style={{ borderLeftColor: accent }}>
+                Technical Projects
+              </h2>
+              <div className="grid grid-cols-1 gap-2">
+                {projects.map((proj) => (
+                  <div key={proj.id} className="p-2 rounded bg-slate-50/80 border border-slate-200/60 text-xs">
+                    <div className="flex items-baseline justify-between gap-2">
+                      <span className="font-bold text-slate-900">{proj.title}</span>
+                      {proj.link && (
+                        <span className="text-[10px] font-mono text-blue-600 truncate max-w-[200px]">
+                          {proj.link}
+                        </span>
+                      )}
+                    </div>
+                    {proj.description && (
+                      <p className="text-[11px] text-slate-600 mt-0.5">{proj.description}</p>
+                    )}
+                    {proj.technologies && (
+                      <div className="mt-1 text-[10px] font-mono text-slate-500">
+                        <span className="font-bold text-slate-700">Stack:</span> {proj.technologies}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Education & Certifications Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+            {education && education.length > 0 && (
+              <section className="page-break-avoid">
+                <h2 className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-700 bg-slate-100 px-2 py-0.5 rounded-sm inline-block mb-1.5 border-l-2" style={{ borderLeftColor: accent }}>
+                  Education
+                </h2>
+                <div className="space-y-1.5">
+                  {education.map((edu) => (
+                    <div key={edu.id} className="text-xs">
+                      <div className="font-bold text-slate-900 text-[12px]">{edu.degree}</div>
+                      <div className="text-[11px] text-slate-600 font-medium">
+                        {edu.school}{edu.location ? `, ${edu.location}` : ''}
+                      </div>
+                      <div className="text-[10.5px] font-mono text-slate-400">
+                        {formatDate(edu.startDate)} – {edu.current ? 'Present' : formatDate(edu.endDate)}
+                      </div>
+                      {edu.description && (
+                        <div className="text-[10.5px] text-slate-500 mt-0.5">{edu.description}</div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {certifications && certifications.length > 0 && (
+              <section className="page-break-avoid">
+                <h2 className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-700 bg-slate-100 px-2 py-0.5 rounded-sm inline-block mb-1.5 border-l-2" style={{ borderLeftColor: accent }}>
+                  Certifications
+                </h2>
+                <div className="space-y-1.5">
+                  {certifications.map((cert) => (
+                    <div key={cert.id} className="text-xs">
+                      <div className="font-bold text-slate-900 text-[11.5px]">{cert.name}</div>
+                      <div className="text-[11px] text-slate-600">
+                        {cert.issuer} {cert.date && <span className="font-mono text-slate-400">({formatDate(cert.date)})</span>}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </section>
             )}

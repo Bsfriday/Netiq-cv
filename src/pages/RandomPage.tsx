@@ -6,6 +6,7 @@ import { ResponsiveCvPreview } from '../components/common/ResponsiveCvPreview';
 import { exportCvToPdf, exportCvToJson, exportCvToTxt, printCv } from '../utils/pdfExport';
 import { saveResumeToList } from '../utils/storage';
 import { triggerReviewPrompt } from '../utils/reviewStorage';
+import { CountrySelector } from '../components/robotic/CountrySelector';
 import { 
   Sparkles, 
   Edit3, 
@@ -21,7 +22,8 @@ import {
   ChevronDown,
   FileJson,
   FileText,
-  Printer
+  Printer,
+  Globe
 } from 'lucide-react';
 
 interface RandomPageProps {
@@ -35,15 +37,19 @@ export const RandomPage: React.FC<RandomPageProps> = ({
   onEditCv, 
   onNavigate 
 }) => {
-  const [currentCv, setCurrentCv] = useState<ResumeData>(() => initialCv || generateRandomCv());
   const [selectedIndustry, setSelectedIndustry] = useState<IndustryCategory | 'Any'>('Any');
+  const [selectedCountry, setSelectedCountry] = useState<string>('Any Country (Random)');
+  const [currentCv, setCurrentCv] = useState<ResumeData>(() => initialCv || generateRandomCv(undefined, undefined));
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [previewScale, setPreviewScale] = useState(0.85);
   const [isExporting, setIsExporting] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
 
   const handleGenerateAnother = () => {
-    const nextCv = generateRandomCv(selectedIndustry === 'Any' ? undefined : selectedIndustry);
+    const nextCv = generateRandomCv(
+      selectedIndustry === 'Any' ? undefined : selectedIndustry,
+      selectedCountry === 'Any Country (Random)' ? undefined : selectedCountry
+    );
     setCurrentCv(nextCv);
     setSavedSuccess(false);
     triggerReviewPrompt('random_generated', 2500);
@@ -107,14 +113,18 @@ export const RandomPage: React.FC<RandomPageProps> = ({
               </span>
             </div>
 
-            <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-lg">
+            {/* Industry Filter */}
+            <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl">
               <Filter className="w-3.5 h-3.5 text-slate-500 ml-1.5" />
               <select
                 value={selectedIndustry}
                 onChange={(e) => {
                   const val = e.target.value as IndustryCategory | 'Any';
                   setSelectedIndustry(val);
-                  const nextCv = generateRandomCv(val === 'Any' ? undefined : val);
+                  const nextCv = generateRandomCv(
+                    val === 'Any' ? undefined : val,
+                    selectedCountry === 'Any Country (Random)' ? undefined : selectedCountry
+                  );
                   setCurrentCv(nextCv);
                 }}
                 className="bg-transparent text-xs font-medium text-slate-700 focus:outline-hidden pr-2 cursor-pointer"
@@ -125,6 +135,25 @@ export const RandomPage: React.FC<RandomPageProps> = ({
                   <option key={ind} value={ind}>{ind}</option>
                 ))}
               </select>
+            </div>
+
+            {/* Country Filter / Selector */}
+            <div className="w-48 sm:w-64">
+              <CountrySelector
+                value={selectedCountry}
+                onChange={(countryName) => {
+                  setSelectedCountry(countryName || 'Any Country (Random)');
+                  const nextCv = generateRandomCv(
+                    selectedIndustry === 'Any' ? undefined : selectedIndustry,
+                    countryName === 'Any Country (Random)' ? undefined : countryName
+                  );
+                  setCurrentCv(nextCv);
+                }}
+                allowAnyRandom={true}
+                showRandomButton={false}
+                placeholder="Filter by country..."
+                id="random-page-country-selector"
+              />
             </div>
           </div>
 

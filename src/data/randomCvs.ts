@@ -1,5 +1,6 @@
 import { ResumeData, IndustryCategory, CvTemplate } from '../types/cv';
 import { SAMPLE_CVS } from './sampleCvs';
+import { ALL_COUNTRIES, getRandomCountry, findCountryByName, CountryInfo } from './countriesData';
 
 const FIRST_NAMES = [
   'Liam', 'Emma', 'Noah', 'Olivia', 'Ethan', 'Sophia', 'Lucas', 'Ava',
@@ -60,17 +61,30 @@ function getRandomItem<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-export function generateRandomCv(chosenIndustry?: IndustryCategory): ResumeData {
+export function generateRandomCv(chosenIndustry?: IndustryCategory, chosenCountry?: string): ResumeData {
   const industry = chosenIndustry || getRandomItem(INDUSTRIES);
   const baseSample = SAMPLE_CVS[industry] || SAMPLE_CVS['Technology'];
+
+  // Resolve country
+  let countryInfo: CountryInfo;
+  if (!chosenCountry || chosenCountry === 'Any' || chosenCountry === 'Any Country (Random)') {
+    countryInfo = getRandomCountry();
+  } else {
+    countryInfo = findCountryByName(chosenCountry) || getRandomCountry();
+  }
 
   const firstName = getRandomItem(FIRST_NAMES);
   const lastName = getRandomItem(LAST_NAMES);
   const fullName = `${firstName} ${lastName}`;
-  const location = getRandomItem(CITIES);
+  
+  const city = countryInfo.majorCities && countryInfo.majorCities.length > 0
+    ? getRandomItem(countryInfo.majorCities)
+    : countryInfo.capital || 'Remote';
+  const location = `${city}, ${countryInfo.name}`;
+
   const cleanEmailName = `${firstName.toLowerCase()}.${lastName.toLowerCase()}`;
   const email = `${cleanEmailName}.demo@netiqcv.io`;
-  const phone = `+1 (555) ${Math.floor(100 + Math.random() * 900)}-${Math.floor(1000 + Math.random() * 9000)}`;
+  const phone = `${countryInfo.phonePrefix} ${Math.floor(100 + Math.random() * 900)}-${Math.floor(1000 + Math.random() * 9000)}`;
   const website = `${cleanEmailName}.pro.example`;
   const linkedin = `linkedin.com/in/${cleanEmailName}-pro`;
   const github = `github.com/${cleanEmailName}`;
@@ -87,10 +101,23 @@ export function generateRandomCv(chosenIndustry?: IndustryCategory): ResumeData 
     email,
     phone,
     location,
+    country: countryInfo.name,
     website,
     linkedin,
     github,
   };
+
+  // Adjust education to local university if available
+  if (cloned.education && cloned.education.length > 0 && countryInfo.universities && countryInfo.universities.length > 0) {
+    cloned.education[0].school = getRandomItem(countryInfo.universities);
+    cloned.education[0].location = city;
+  }
+
+  // Adjust experience company if available
+  if (cloned.experience && cloned.experience.length > 0 && countryInfo.companies && countryInfo.companies.length > 0) {
+    cloned.experience[0].company = countryInfo.companies[0];
+    cloned.experience[0].location = `${city} (Hybrid / Onsite)`;
+  }
 
   // Adjust theme subtly for variety
   cloned.themeConfig = {

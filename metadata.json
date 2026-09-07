@@ -1,6 +1,6 @@
 {
   "name": "NetiqCV",
-  "description": "Professional resume studio by CreatIQ Products with AI Resume Generator (tailored by country, age, occupation, and status), interactive editor, 7 custom layout templates, and high-fidelity PDF export.",
+  "description": "Professional resume studio by CreatIQ Products with Robotic Resume (AI & ATS-optimized builder for modern careers), AI Resume Generator, interactive editor, 7 custom layout templates, and high-fidelity PDF export.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

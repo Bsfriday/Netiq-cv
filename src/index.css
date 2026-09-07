@@ -66,11 +66,122 @@
       width: 100% !important;
       max-width: 100% !important;
     }
+
+    /* Strict Mobile Advertisement Dimensions */
+    .ad-container {
+      width: 100%;
+      max-width: 300px;
+      height: 35px;
+      min-height: 35px;
+      max-height: 40px;
+      margin: 3px auto;
+      overflow: hidden;
+    }
   }
 }
 
 .font-serif {
   font-family: 'Merriweather', Georgia, serif;
+}
+
+/* Professional Resume Typography Classes */
+.font-cv-sans {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+.font-cv-serif {
+  font-family: 'Merriweather', Georgia, Cambria, 'Times New Roman', Times, serif;
+}
+.font-cv-grotesk {
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+.font-cv-mono {
+  font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, Monaco, monospace;
+}
+.font-cv-classic {
+  font-family: 'Libre Baskerville', 'Times New Roman', Times, 'Georgia', serif;
+}
+.font-cv-modern {
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Dynamic Proportional Resume Font Sizing */
+.cv-size-sm {
+  --cv-text-base: 12.5px;
+  --cv-text-subhead: 13.5px;
+  --cv-text-lead: 13.5px;
+  --cv-text-meta: 11px;
+  --cv-text-badge: 10.5px;
+  --cv-text-title: 24px;
+  --cv-text-role: 14.5px;
+  --cv-text-heading: 12.5px;
+  --cv-line-height: 1.48;
+}
+
+.cv-size-md {
+  --cv-text-base: 14px;
+  --cv-text-subhead: 15px;
+  --cv-text-lead: 15px;
+  --cv-text-meta: 12.5px;
+  --cv-text-badge: 11.5px;
+  --cv-text-title: 28px;
+  --cv-text-role: 16px;
+  --cv-text-heading: 14px;
+  --cv-line-height: 1.58;
+}
+
+.cv-size-lg {
+  --cv-text-base: 15.5px;
+  --cv-text-subhead: 16.5px;
+  --cv-text-lead: 16.5px;
+  --cv-text-meta: 13.5px;
+  --cv-text-badge: 12.5px;
+  --cv-text-title: 32px;
+  --cv-text-role: 17.5px;
+  --cv-text-heading: 15.5px;
+  --cv-line-height: 1.62;
+}
+
+.cv-size-xl {
+  --cv-text-base: 17px;
+  --cv-text-subhead: 18px;
+  --cv-text-lead: 18px;
+  --cv-text-meta: 14.5px;
+  --cv-text-badge: 13px;
+  --cv-text-title: 36px;
+  --cv-text-role: 19px;
+  --cv-text-heading: 17px;
+  --cv-line-height: 1.68;
+}
+
+/* Ensure CV preview text scales dynamically with selected font size */
+.cv-preview-sheet {
+  font-size: var(--cv-text-base, 14px);
+  line-height: var(--cv-line-height, 1.58);
+}
+
+.cv-preview-sheet p,
+.cv-preview-sheet li,
+.cv-preview-sheet span:not(.font-bold):not(.text-2xl):not(.text-3xl):not(.text-4xl),
+.cv-preview-sheet .text-xs {
+  font-size: var(--cv-text-base, 14px);
+  line-height: var(--cv-line-height, 1.58);
+}
+
+.cv-preview-sheet .text-\[11px\],
+.cv-preview-sheet .text-\[10px\] {
+  font-size: var(--cv-text-meta, 12px) !important;
+}
+
+.cv-preview-sheet .text-sm {
+  font-size: var(--cv-text-subhead, 15px) !important;
+}
+
+.cv-preview-sheet h2 {
+  font-size: var(--cv-text-heading, 14px);
+}
+
+.cv-preview-sheet h3 {
+  font-size: var(--cv-text-subhead, 15px);
 }
 
 /* Hide scrollbars while keeping touch scroll ability */

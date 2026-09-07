@@ -22,6 +22,7 @@ import {
   FileText
 } from 'lucide-react';
 import { ResumeData, CvTemplate, CvFont } from '../types/cv';
+import { CountrySelector } from '../components/robotic/CountrySelector';
 import { 
   COUNTRIES, 
   AGE_GROUPS, 
@@ -351,26 +352,20 @@ export const AiGeneratorPage: React.FC<AiGeneratorPageProps> = ({ onEditCv, onNa
               </p>
             </div>
 
-            {/* 1. Country Selection */}
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 text-xs font-bold text-slate-700" htmlFor="ai-select-country">
-                <Globe className="w-3.5 h-3.5 text-blue-600" />
-                <span>1. Country & Region</span>
-              </label>
-              <select
-                id="ai-select-country"
+            {/* 1. Country Selection - Comprehensive 250+ global countries */}
+            <div className="space-y-1">
+              <CountrySelector
+                label="1. Country & Region"
                 value={selectedCountry}
-                onChange={(e) => setSelectedCountry(e.target.value)}
-                className="w-full text-xs font-semibold bg-slate-50 hover:bg-slate-100/80 focus:bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-hidden transition-all"
-              >
-                {COUNTRIES.map((c) => (
-                  <option key={c.code} value={c.name}>
-                    {c.name} ({c.cities[0]})
-                  </option>
-                ))}
-              </select>
-              <p className="text-[10px] text-slate-400">
-                Adapts university formats, phone prefixes, addresses, and localized company standards.
+                onChange={(countryName) => {
+                  if (countryName) setSelectedCountry(countryName);
+                }}
+                showRandomButton={true}
+                placeholder="Search 250+ countries or territories..."
+                id="ai-select-country"
+              />
+              <p className="text-[10px] text-slate-400 mt-1">
+                Adapts university formats, phone prefixes, addresses, and localized enterprise standards.
               </p>
             </div>
 
