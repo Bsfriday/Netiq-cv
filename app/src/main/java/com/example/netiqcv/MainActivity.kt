@@ -25,6 +25,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.netiqcv.model.ResumeData
 import com.example.netiqcv.ui.screens.*
 import com.example.netiqcv.ui.theme.NetiqCVTheme
 import com.example.netiqcv.ui.viewmodel.CvViewModel
@@ -62,6 +63,26 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
+                val navigateToBuilderWithCv: (ResumeData) -> Unit = { cv ->
+                    viewModel.setActiveCv(cv)
+                    navController.navigate(ScreenRoute.CREATE.route) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                    }
+                }
+
+                val handleCreateNew: () -> Unit = {
+                    viewModel.createNewBlankResume()
+                    navController.navigate(ScreenRoute.CREATE.route) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                    }
+                }
+
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     bottomBar = {
@@ -74,6 +95,9 @@ class MainActivity : ComponentActivity() {
                                 NavigationBarItem(
                                     selected = selected,
                                     onClick = {
+                                        if (screen == ScreenRoute.AI_GENERATOR) {
+                                            prefilledProfessionForAi = null
+                                        }
                                         navController.navigate(screen.route) {
                                             popUpTo(navController.graph.findStartDestination().id) {
                                                 saveState = true
@@ -135,19 +159,14 @@ class MainActivity : ComponentActivity() {
                                 onNavigateToRandom = { navController.navigate("random") },
                                 onNavigateToSamples = { navController.navigate(ScreenRoute.SAMPLES.route) },
                                 onNavigateToSaved = { navController.navigate(ScreenRoute.SAVED.route) },
-                                onCreateNew = {
-                                    viewModel.createNewBlankResume()
-                                    navController.navigate(ScreenRoute.CREATE.route)
-                                }
+                                onCreateNew = handleCreateNew
                             )
                         }
 
                         composable(ScreenRoute.AI_GENERATOR.route) {
                             AiGeneratorScreen(
                                 viewModel = viewModel,
-                                onEditInBuilder = { cv ->
-                                    navController.navigate(ScreenRoute.CREATE.route)
-                                },
+                                onEditInBuilder = navigateToBuilderWithCv,
                                 initialProfession = prefilledProfessionForAi
                             )
                         }
@@ -155,9 +174,7 @@ class MainActivity : ComponentActivity() {
                         composable("robotic_resume") {
                             RoboticResumeScreen(
                                 viewModel = viewModel,
-                                onEditInBuilder = { cv ->
-                                    navController.navigate(ScreenRoute.CREATE.route)
-                                },
+                                onEditInBuilder = navigateToBuilderWithCv,
                                 onBack = { navController.popBackStack() }
                             )
                         }
@@ -184,30 +201,22 @@ class MainActivity : ComponentActivity() {
                         composable("random") {
                             RandomPageScreen(
                                 viewModel = viewModel,
-                                onEditInBuilder = { cv ->
-                                    navController.navigate(ScreenRoute.CREATE.route)
-                                }
+                                onEditInBuilder = navigateToBuilderWithCv
                             )
                         }
 
                         composable(ScreenRoute.SAMPLES.route) {
                             SamplesPageScreen(
                                 viewModel = viewModel,
-                                onEditInBuilder = { cv ->
-                                    navController.navigate(ScreenRoute.CREATE.route)
-                                }
+                                onEditInBuilder = navigateToBuilderWithCv
                             )
                         }
 
                         composable(ScreenRoute.SAVED.route) {
                             SavedPageScreen(
                                 viewModel = viewModel,
-                                onEditInBuilder = { cv ->
-                                    navController.navigate(ScreenRoute.CREATE.route)
-                                },
-                                onCreateNew = {
-                                    navController.navigate(ScreenRoute.CREATE.route)
-                                }
+                                onEditInBuilder = navigateToBuilderWithCv,
+                                onCreateNew = handleCreateNew
                             )
                         }
                     }
