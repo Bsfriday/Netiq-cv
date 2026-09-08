@@ -15,9 +15,11 @@ import { SavedPage } from './pages/SavedPage';
 import { AiGeneratorPage } from './pages/AiGeneratorPage';
 import { RoboticResumePage } from './pages/RoboticResumePage';
 import { ResumeTypeSelectionPage } from './pages/ResumeTypeSelectionPage';
+import { GeneratedCvPage } from './pages/GeneratedCvPage';
 import { ResumeTypeItem, resolveResumeRoute } from './data/resumeTypes';
 import { ReviewPromptModal } from './components/common/ReviewPromptModal';
 import { UserReview } from './utils/reviewStorage';
+import { saveResumeToList } from './utils/storage';
 
 export default function App() {
   const VALID_ROUTES = [
@@ -29,7 +31,9 @@ export default function App() {
     '/robotic-resume',
     '/resume/type-selection',
     '/select-type',
-    '/resume-type-selection'
+    '/resume-type-selection',
+    '/view-cv',
+    '/generated-cv'
   ];
 
   // Simple, robust client-side routing supporting both pathname and hash
@@ -55,6 +59,7 @@ export default function App() {
   const [isReviewModalOpen, setIsReviewModalOpen] = useState<boolean>(false);
   const [reviewTrigger, setReviewTrigger] = useState<UserReview['actionTrigger']>('cv_download');
   const [aiGeneratorProfession, setAiGeneratorProfession] = useState<string | undefined>(undefined);
+  const [autoOpenGeneratorInCreate, setAutoOpenGeneratorInCreate] = useState<boolean>(false);
 
   // Listen for automatic review prompt events from CV generator and export triggers
   useEffect(() => {
@@ -117,7 +122,17 @@ export default function App() {
     } else {
       setActiveCv({ ...DEFAULT_BLANK_CV, id: `user-${Date.now()}` });
     }
+    setAutoOpenGeneratorInCreate(true);
     navigateTo('/create');
+  };
+
+  // Immediate redirection to generated CV page
+  const handleCvGenerated = (newCv: ResumeData) => {
+    setActiveCv(newCv);
+    saveResumeToList(newCv);
+    setSavedCount(getSavedResumesList().length);
+    setAutoOpenGeneratorInCreate(false);
+    navigateTo('/view-cv');
   };
 
   // User chooses to edit a random CV or a sample CV in builder
@@ -159,6 +174,7 @@ export default function App() {
           onNavigate={navigateTo}
           onGenerateRandom={handleGenerateRandom}
           onCreateNew={handleCreateMyCv}
+          onCvGenerated={handleCvGenerated}
         />
       )}
 
@@ -182,6 +198,7 @@ export default function App() {
           onEditCv={handleEditCvInBuilder}
           onNavigate={navigateTo}
           initialProfession={aiGeneratorProfession}
+          onCvGenerated={handleCvGenerated}
         />
       )}
 
@@ -196,6 +213,24 @@ export default function App() {
       {currentRoute === '/create' && (
         <CreatePage 
           initialCv={activeCv}
+          onNavigate={navigateTo}
+          initialOpenGenerator={autoOpenGeneratorInCreate}
+          onCloseGenerator={() => setAutoOpenGeneratorInCreate(false)}
+          onCvGenerated={handleCvGenerated}
+        />
+      )}
+
+      {(currentRoute === '/view-cv' || currentRoute === '/generated-cv') && (
+        <GeneratedCvPage 
+          cv={activeCv}
+          onUpdateCv={(updated) => {
+            setActiveCv(updated);
+            saveResumeToList(updated);
+          }}
+          onEditInStudio={(cvToEdit) => {
+            setActiveCv(cvToEdit);
+            navigateTo('/create');
+          }}
           onNavigate={navigateTo}
         />
       )}

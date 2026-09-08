@@ -11,7 +11,8 @@ import {
   PlusCircle,
   Zap,
   ChevronRight,
-  Bot
+  Bot,
+  Eye
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -190,6 +191,17 @@ export const Header: React.FC<HeaderProps> = ({ currentRoute, onNavigate, savedC
             <FileText className="w-4 h-4" />
             <span>Create My CV</span>
           </button>
+
+          {(currentRoute === '/view-cv' || currentRoute === '/generated-cv') && (
+            <button
+              onClick={() => onNavigate('/view-cv')}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-blue-600 text-white shadow-md shadow-blue-500/25 transition-all"
+              id="nav-generated-cv-btn"
+            >
+              <Eye className="w-4 h-4" />
+              <span>Generated CV</span>
+            </button>
+          )}
 
           <button
             onClick={() => onNavigate('/random')}

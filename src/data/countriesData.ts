@@ -2305,3 +2305,60 @@ export function searchCountries(query: string): CountryInfo[] {
     c.region.toLowerCase().includes(clean)
   );
 }
+
+export interface CountryLocationDetails {
+  countryName: string;
+  city: string;
+  region: string;
+  capital: string;
+  majorCities: string[];
+  phonePrefix: string;
+  countryInfo?: CountryInfo;
+}
+
+export function getCountryLocationDetails(countryNameOrCode?: string): CountryLocationDetails {
+  if (!countryNameOrCode) {
+    const us = findCountryByName('United States');
+    return {
+      countryName: 'United States',
+      city: 'Washington, D.C.',
+      region: 'North America',
+      capital: 'Washington, D.C.',
+      majorCities: ['New York, NY', 'San Francisco, CA', 'Austin, TX', 'Seattle, WA', 'Chicago, IL', 'Boston, MA'],
+      phonePrefix: '+1',
+      countryInfo: us
+    };
+  }
+
+  const country = findCountryByName(countryNameOrCode) || findCountryByCode(countryNameOrCode);
+  if (!country) {
+    return {
+      countryName: countryNameOrCode,
+      city: '',
+      region: '',
+      capital: '',
+      majorCities: [],
+      phonePrefix: '+1',
+      countryInfo: undefined
+    };
+  }
+
+  const defaultCity = country.capital || (country.majorCities && country.majorCities[0]) || '';
+  const allCities: string[] = [];
+  if (country.capital) allCities.push(country.capital);
+  if (country.majorCities) {
+    for (const c of country.majorCities) {
+      if (!allCities.includes(c)) allCities.push(c);
+    }
+  }
+
+  return {
+    countryName: country.name,
+    city: defaultCity,
+    region: country.region,
+    capital: country.capital,
+    majorCities: allCities,
+    phonePrefix: country.phonePrefix,
+    countryInfo: country
+  };
+}

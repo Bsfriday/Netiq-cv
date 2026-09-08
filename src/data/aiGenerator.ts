@@ -609,6 +609,10 @@ export interface AiGeneratorInput {
   occupation: string;
   employmentStatus: string;
   customOccupation?: string;
+  customFullName?: string;
+  city?: string;
+  region?: string;
+  overridePersonalInfo?: Partial<ResumeData['personalInfo']>;
 }
 
 // Sample first and last names for realistic generation
@@ -649,18 +653,25 @@ export function generateTailoredAiResume(input: AiGeneratorInput): ResumeData {
   const ageGroupData = AGE_GROUPS.find(a => a.id === input.ageGroup) || AGE_GROUPS[1];
   const employmentStatusData = EMPLOYMENT_STATUSES.find(e => e.id === input.employmentStatus) || EMPLOYMENT_STATUSES[1];
 
-  const customTitle = input.customOccupation?.trim();
+  const customTitle = input.customOccupation?.trim() || input.overridePersonalInfo?.jobTitle?.trim();
   const matchedOccupation = POPULAR_OCCUPATIONS.find(o => o.title.toLowerCase() === input.occupation.toLowerCase()) 
     || POPULAR_OCCUPATIONS.find(o => o.id === input.occupation)
+    || (customTitle ? POPULAR_OCCUPATIONS.find(o => customTitle.toLowerCase().includes(o.title.toLowerCase()) || o.title.toLowerCase().includes(customTitle.toLowerCase())) : null)
     || POPULAR_OCCUPATIONS[0];
 
   const actualJobTitle = customTitle || matchedOccupation.title;
   const firstName = getRandomItem(FIRST_NAMES);
   const lastName = getRandomItem(LAST_NAMES);
-  const fullName = `${firstName} ${lastName}`;
-  const cleanNameForEmail = `${firstName.toLowerCase()}.${lastName.toLowerCase()}`;
+  const generatedFullName = `${firstName} ${lastName}`;
+  const fullName = input.customFullName?.trim() || input.overridePersonalInfo?.fullName?.trim() || generatedFullName;
+  const nameParts = fullName.split(' ');
+  const emailPrefix = nameParts.length >= 2 
+    ? `${nameParts[0].toLowerCase()}.${nameParts[nameParts.length - 1].toLowerCase()}`
+    : fullName.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const cleanNameForEmail = emailPrefix || `${firstName.toLowerCase()}.${lastName.toLowerCase()}`;
   
-  const city = getRandomItem(countryData.cities);
+  const city = input.city?.trim() || (fullInfo?.capital ? fullInfo.capital : getRandomItem(countryData.cities));
+  const region = input.region?.trim() || fullInfo?.region || '';
   const university = getRandomItem(countryData.universities);
   const primaryCompany = getRandomItem(countryData.companies);
   const secondaryCompany = countryData.companies.find(c => c !== primaryCompany) || 'Horizon Enterprises';
@@ -895,12 +906,16 @@ export function generateTailoredAiResume(input: AiGeneratorInput): ResumeData {
     personalInfo: {
       fullName,
       jobTitle: actualJobTitle,
-      email: `${cleanNameForEmail}@example.com`,
-      phone: `${countryData.phonePrefix} ${Math.floor(100 + Math.random() * 900)} ${Math.floor(1000 + Math.random() * 9000)}`,
-      location: `${city}, ${countryData.name}`,
-      linkedin: `linkedin.com/in/${cleanNameForEmail}`,
-      github: matchedOccupation.category === 'Technology' ? `github.com/${cleanNameForEmail}` : undefined,
-      website: `https://${cleanNameForEmail}.dev`
+      email: input.overridePersonalInfo?.email?.trim() || `${cleanNameForEmail}@example.com`,
+      phone: input.overridePersonalInfo?.phone?.trim() || `${countryData.phonePrefix} ${Math.floor(100 + Math.random() * 900)} ${Math.floor(1000 + Math.random() * 9000)}`,
+      country: countryData.name,
+      city,
+      region,
+      location: input.overridePersonalInfo?.location?.trim() || `${city}, ${countryData.name}`,
+      photoUrl: input.overridePersonalInfo?.photoUrl,
+      linkedin: input.overridePersonalInfo?.linkedin || `linkedin.com/in/${cleanNameForEmail}`,
+      github: input.overridePersonalInfo?.github || (matchedOccupation.category === 'Technology' ? `github.com/${cleanNameForEmail}` : undefined),
+      website: input.overridePersonalInfo?.website || `https://${cleanNameForEmail}.dev`
     },
     summary,
     experience,

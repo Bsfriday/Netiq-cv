@@ -1,17 +1,65 @@
-import React from 'react';
-import { Sparkles, PlusCircle, ArrowRight, Compass, FileText, CheckCircle2, ShieldCheck, Zap, Bot } from 'lucide-react';
+import React, { useState } from 'react';
+import { Sparkles, PlusCircle, ArrowRight, Compass, FileText, CheckCircle2, ShieldCheck, Zap, Bot, X, Loader2 } from 'lucide-react';
+import { ResumeData } from '../types/cv';
+import { generateTailoredAiResume } from '../data/aiGenerator';
+import { CountrySelector } from '../components/robotic/CountrySelector';
+import { CountryCityRegionSelector } from '../components/common/CountryCityRegionSelector';
 
 interface HomePageProps {
   onNavigate: (route: string) => void;
   onGenerateRandom: () => void;
   onCreateNew: () => void;
+  onCvGenerated?: (cv: ResumeData) => void;
 }
 
 export const HomePage: React.FC<HomePageProps> = ({ 
   onNavigate, 
   onGenerateRandom, 
-  onCreateNew 
+  onCreateNew,
+  onCvGenerated
 }) => {
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [modalFullName, setModalFullName] = useState('');
+  const [modalJobTitle, setModalJobTitle] = useState('Software Engineer');
+  const [modalCountry, setModalCountry] = useState('United States');
+  const [modalCity, setModalCity] = useState('Washington, D.C.');
+  const [modalRegion, setModalRegion] = useState('North America');
+  const [modalAgeGroup, setModalAgeGroup] = useState('23-29');
+  const [modalEmploymentStatus, setModalEmploymentStatus] = useState('employed');
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const handleGenerateAndRedirect = () => {
+    setIsGenerating(true);
+    const titleToUse = modalJobTitle.trim() || 'Software Engineer';
+    const nameToUse = modalFullName.trim() || 'Alex Morgan';
+    const countryToUse = modalCountry.trim() || 'United States';
+    const cityToUse = modalCity.trim() || undefined;
+    const regionToUse = modalRegion.trim() || undefined;
+
+    setTimeout(() => {
+      try {
+        const generated = generateTailoredAiResume({
+          occupation: titleToUse,
+          customOccupation: titleToUse,
+          country: countryToUse,
+          city: cityToUse,
+          region: regionToUse,
+          ageGroup: modalAgeGroup,
+          employmentStatus: modalEmploymentStatus,
+          customFullName: nameToUse
+        });
+
+        setIsCreateModalOpen(false);
+        if (onCvGenerated) {
+          onCvGenerated(generated);
+        } else {
+          onNavigate('/view-cv');
+        }
+      } finally {
+        setIsGenerating(false);
+      }
+    }, 400);
+  };
   return (
     <main className="flex-1 flex flex-col items-center justify-center px-4 sm:px-8 md:px-12 py-10 sm:py-16 max-w-6xl mx-auto w-full">
       {/* Brand & Hero Header with 3D aesthetic */}
@@ -87,7 +135,7 @@ export const HomePage: React.FC<HomePageProps> = ({
 
         {/* OPTION 2: Create My CV */}
         <div 
-          onClick={onCreateNew}
+          onClick={() => setIsCreateModalOpen(true)}
           id="card-create-my-cv"
           className="group cursor-pointer p-6 sm:p-8 rounded-3xl bg-white border border-slate-200/90 shadow-[0_10px_30px_-10px_rgba(37,99,235,0.15),0_4px_6px_-2px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_40px_-10px_rgba(37,99,235,0.28)] hover:border-blue-400 hover:-translate-y-1.5 transition-all duration-200 flex flex-col items-start relative overflow-hidden"
         >
@@ -108,14 +156,14 @@ export const HomePage: React.FC<HomePageProps> = ({
           </h2>
 
           <p className="text-slate-500 text-xs sm:text-sm leading-relaxed mb-6">
-            Build and personalize your own resume step-by-step with real-time live preview, score feedback, section reordering, and PDF export.
+            Instantly generate a tailored professional CV with personalized metrics, or build step-by-step with real-time feedback and PDF export.
           </p>
 
           <button 
             type="button"
             onClick={(e) => {
               e.stopPropagation();
-              onCreateNew();
+              setIsCreateModalOpen(true);
             }}
             className="mt-auto w-full py-3.5 px-4 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-2xl font-bold text-xs sm:text-sm shadow-md shadow-blue-600/30 hover:shadow-lg hover:shadow-blue-600/40 transition-all flex items-center justify-center gap-1.5"
             id="btn-create-my-cv-action"
@@ -231,6 +279,193 @@ export const HomePage: React.FC<HomePageProps> = ({
           <span>My Saved Resumes</span>
         </button>
       </div>
+
+      {/* Create My CV Modal */}
+      {isCreateModalOpen && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-xs no-print overflow-y-auto"
+          onClick={() => setIsCreateModalOpen(false)}
+        >
+          <div 
+            className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-5 my-8 border border-slate-100 animate-in fade-in zoom-in-95 duration-150"
+            onClick={(e) => e.stopPropagation()}
+            id="modal-create-my-cv"
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-md shadow-blue-500/20">
+                  <Sparkles className="w-5 h-5 text-amber-300 animate-pulse" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-black text-slate-900">Create & Generate My CV</h3>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">
+                      Instant
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Synthesizes a complete, professional CV tailored for your target role & country.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsCreateModalOpen(false)}
+                className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors"
+                id="btn-close-home-create-modal"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Quick suggestions */}
+            <div className="space-y-1.5">
+              <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                Popular Roles
+              </label>
+              <div className="flex flex-wrap gap-1.5">
+                {[
+                  'Software Engineer',
+                  'Registered Nurse (RN)',
+                  'Project Manager',
+                  'Certified Public Accountant',
+                  'Civil Engineer',
+                  'Data Scientist',
+                  'Marketing Specialist'
+                ].map((role) => (
+                  <button
+                    key={role}
+                    type="button"
+                    onClick={() => setModalJobTitle(role)}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
+                      modalJobTitle === role
+                        ? 'bg-blue-600 text-white shadow-xs'
+                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    }`}
+                  >
+                    {role}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Inputs */}
+            <div className="space-y-3.5">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Full Name
+                </label>
+                <input
+                  type="text"
+                  value={modalFullName}
+                  onChange={(e) => setModalFullName(e.target.value)}
+                  placeholder="e.g. Jordan Mitchell"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
+                  id="home-modal-input-name"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Target Job Title / Profession <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={modalJobTitle}
+                  onChange={(e) => setModalJobTitle(e.target.value)}
+                  placeholder="e.g. Senior Software Engineer"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-semibold text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
+                  id="home-modal-input-role"
+                />
+              </div>
+
+              <div className="bg-slate-50/70 p-3.5 rounded-2xl border border-slate-200">
+                <CountryCityRegionSelector
+                  country={modalCountry}
+                  city={modalCity}
+                  region={modalRegion}
+                  onChange={(payload) => {
+                    setModalCountry(payload.country);
+                    setModalCity(payload.city);
+                    setModalRegion(payload.region);
+                  }}
+                  idPrefix="home-modal-loc"
+                  compact={true}
+                  showQuickCities={true}
+                  showRegionField={true}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 mb-1">Experience</label>
+                  <select
+                    value={modalAgeGroup}
+                    onChange={(e) => setModalAgeGroup(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs bg-white focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="18-22">Junior (0-2 yrs)</option>
+                    <option value="23-29">Mid-Level (3-5 yrs)</option>
+                    <option value="30-39">Senior (6-10 yrs)</option>
+                    <option value="40-49">Lead / Principal</option>
+                    <option value="50+">Executive (15+ yrs)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 mb-1">Status</label>
+                  <select
+                    value={modalEmploymentStatus}
+                    onChange={(e) => setModalEmploymentStatus(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs bg-white focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="employed">Employed</option>
+                    <option value="unemployed">Seeking Role</option>
+                    <option value="recent_grad">Recent Graduate</option>
+                    <option value="freelancer">Freelancer</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsCreateModalOpen(false);
+                  onCreateNew();
+                }}
+                className="text-xs font-semibold text-slate-500 hover:text-blue-600 underline"
+                id="btn-manual-studio-open"
+              >
+                Or build manually in Studio →
+              </button>
+
+              <button
+                type="button"
+                onClick={handleGenerateAndRedirect}
+                disabled={isGenerating}
+                className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-800 active:from-blue-800 text-white rounded-xl text-xs sm:text-sm font-bold shadow-lg shadow-blue-500/25 hover:shadow-xl transition-all flex items-center justify-center gap-2 group"
+                id="btn-home-generate-redirect"
+              >
+                {isGenerating ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Generating Professional CV...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4 text-amber-300 group-hover:rotate-12 transition-transform" />
+                    <span>⚡ Generate & View My CV →</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 };

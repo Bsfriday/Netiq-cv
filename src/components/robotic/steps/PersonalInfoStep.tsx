@@ -1,7 +1,8 @@
 import React from 'react';
 import { RoboticPersonalInfo } from '../../../types/roboticResume';
 import { CountrySelector } from '../CountrySelector';
-import { findCountryByName } from '../../../data/countriesData';
+import { CountryCityRegionSelector } from '../../common/CountryCityRegionSelector';
+import { findCountryByName, getCountryLocationDetails } from '../../../data/countriesData';
 import { User, Mail, Phone, MapPin, Globe, Linkedin, Github, Briefcase } from 'lucide-react';
 
 interface PersonalInfoStepProps {
@@ -125,50 +126,28 @@ export const PersonalInfoStep: React.FC<PersonalInfoStepProps> = ({ data, onChan
           </div>
         </div>
 
-        {/* Geographic Location & Country Selection */}
-        <div className="md:col-span-2 p-4 bg-slate-50/80 rounded-2xl border border-slate-200 space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-              <Globe className="w-4 h-4 text-blue-600" />
-              <span>Country & Location Details</span>
-            </span>
-            <span className="text-[11px] text-slate-500 font-medium">
-              250+ global countries with localized phone codes & cities
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-            {/* Country Selector */}
-            <div>
-              <CountrySelector
-                label="Country / Territory"
-                value={data.country || 'United States'}
-                onChange={handleCountryChange}
-                showRandomButton={true}
-                onRandomSelect={handleCountryChange}
-                required={true}
-                id="robotic-personal-country"
-              />
-            </div>
-
-            {/* Location (City, State) */}
-            <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                City & State / Region <span className="text-rose-500">*</span>
-              </label>
-              <div className="relative">
-                <MapPin className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  value={data.location}
-                  onChange={(e) => handleChange('location', e.target.value)}
-                  placeholder="e.g. Austin, TX (or Remote)"
-                  className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-sm font-medium text-slate-900 bg-white"
-                  id="input-robotic-location"
-                />
-              </div>
-            </div>
-          </div>
+        {/* Geographic Location, Country, City & Region Selection */}
+        <div className="md:col-span-2 p-4 sm:p-5 bg-slate-50/80 rounded-2xl border border-slate-200">
+          <CountryCityRegionSelector
+            country={data.country || 'United States'}
+            city={data.city}
+            region={data.region}
+            location={data.location}
+            phone={data.phone}
+            onChange={(payload) => {
+              onChange({
+                ...data,
+                country: payload.country,
+                city: payload.city,
+                region: payload.region,
+                location: payload.location,
+                phone: payload.phone || data.phone
+              });
+            }}
+            idPrefix="robotic-personal-loc"
+            showQuickCities={true}
+            showRegionField={true}
+          />
         </div>
 
         {/* LinkedIn */}

@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { ResumeData, CvTemplate, CvFont } from '../types/cv';
 import { CountrySelector } from '../components/robotic/CountrySelector';
+import { CountryCityRegionSelector } from '../components/common/CountryCityRegionSelector';
 import { 
   COUNTRIES, 
   AGE_GROUPS, 
@@ -42,12 +43,14 @@ interface AiGeneratorPageProps {
   onEditCv: (cv: ResumeData) => void;
   onNavigate: (route: string) => void;
   initialProfession?: string;
+  onCvGenerated?: (cv: ResumeData) => void;
 }
 
 export const AiGeneratorPage: React.FC<AiGeneratorPageProps> = ({ 
   onEditCv, 
   onNavigate,
-  initialProfession 
+  initialProfession,
+  onCvGenerated
 }) => {
   // Determine initial occupation from initialProfession if passed
   const findMatchingOccupation = (title?: string) => {
@@ -62,8 +65,10 @@ export const AiGeneratorPage: React.FC<AiGeneratorPageProps> = ({
   const defaultOccupation = initialMatch ? initialMatch.title : (initialProfession ? POPULAR_OCCUPATIONS[0].title : 'Software Engineer');
   const defaultCustom = (!initialMatch && initialProfession) ? initialProfession : '';
 
-  // Input states for the 5 parameters
+  // Input states for the parameters
   const [selectedCountry, setSelectedCountry] = useState<string>('United States');
+  const [selectedCity, setSelectedCity] = useState<string>('Washington, D.C.');
+  const [selectedRegion, setSelectedRegion] = useState<string>('North America');
   const [selectedAgeGroup, setSelectedAgeGroup] = useState<string>('23-29');
   const [selectedOccupation, setSelectedOccupation] = useState<string>(defaultOccupation);
   const [selectedEmploymentStatus, setSelectedEmploymentStatus] = useState<string>('employed');
@@ -73,6 +78,8 @@ export const AiGeneratorPage: React.FC<AiGeneratorPageProps> = ({
   const [generatedCv, setGeneratedCv] = useState<ResumeData | null>(() => {
     return generateTailoredAiResume({
       country: 'United States',
+      city: 'Washington, D.C.',
+      region: 'North America',
       ageGroup: '23-29',
       occupation: defaultOccupation,
       employmentStatus: 'employed',
@@ -90,6 +97,8 @@ export const AiGeneratorPage: React.FC<AiGeneratorPageProps> = ({
       setCustomOccupation(custom);
       const updatedCv = generateTailoredAiResume({
         country: selectedCountry,
+        city: selectedCity,
+        region: selectedRegion,
         ageGroup: selectedAgeGroup,
         occupation: occ,
         employmentStatus: selectedEmploymentStatus,
@@ -112,6 +121,8 @@ export const AiGeneratorPage: React.FC<AiGeneratorPageProps> = ({
     setTimeout(() => {
       const input: AiGeneratorInput = {
         country: selectedCountry,
+        city: selectedCity.trim() || undefined,
+        region: selectedRegion.trim() || undefined,
         ageGroup: selectedAgeGroup,
         occupation: selectedOccupation,
         employmentStatus: selectedEmploymentStatus,
@@ -121,12 +132,15 @@ export const AiGeneratorPage: React.FC<AiGeneratorPageProps> = ({
       setGeneratedCv(newCv);
       setIsGenerating(false);
       triggerReviewPrompt('ai_generated', 2500);
-      
-      // On small screens, automatically switch to preview tab to view results
-      if (window.innerWidth < 1024) {
+      saveResumeToList(newCv);
+
+      if (onCvGenerated) {
+        onCvGenerated(newCv);
+      } else if (window.innerWidth < 1024) {
+        // On small screens, automatically switch to preview tab to view results
         setActiveTab('preview');
       }
-    }, 350);
+    }, 400);
   };
 
   // Template and Theme modification handlers on generated CV
@@ -400,18 +414,22 @@ export const AiGeneratorPage: React.FC<AiGeneratorPageProps> = ({
             </div>
 
             {/* 1. Country Selection - Comprehensive 250+ global countries */}
-            <div className="space-y-1">
-              <CountrySelector
-                label="1. Country & Region"
-                value={selectedCountry}
-                onChange={(countryName) => {
-                  if (countryName) setSelectedCountry(countryName);
+            <div className="bg-slate-50/70 p-4 rounded-2xl border border-slate-200">
+              <CountryCityRegionSelector
+                country={selectedCountry}
+                city={selectedCity}
+                region={selectedRegion}
+                onChange={(payload) => {
+                  setSelectedCountry(payload.country);
+                  setSelectedCity(payload.city);
+                  setSelectedRegion(payload.region);
                 }}
-                showRandomButton={true}
-                placeholder="Search 250+ countries or territories..."
-                id="ai-select-country"
+                idPrefix="ai-page-loc"
+                compact={false}
+                showQuickCities={true}
+                showRegionField={true}
               />
-              <p className="text-[10px] text-slate-400 mt-1">
+              <p className="text-[10px] text-slate-400 mt-2">
                 Adapts university formats, phone prefixes, addresses, and localized enterprise standards.
               </p>
             </div>

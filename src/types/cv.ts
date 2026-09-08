@@ -5,6 +5,8 @@ export interface PersonalInfo {
   phone: string;
   location: string;
   country?: string;
+  city?: string;
+  region?: string;
   website?: string;
   linkedin?: string;
   github?: string;

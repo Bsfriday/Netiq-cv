@@ -15,7 +15,8 @@ import { exportCvToPdf, exportCvToJson, exportCvToTxt, printCv } from '../utils/
 import { saveDraftToStorage, saveResumeToList } from '../utils/storage';
 import { calculateResumeStrength } from '../utils/completion';
 import { CountrySelector } from '../components/robotic/CountrySelector';
-import { findCountryByName } from '../data/countriesData';
+import { CountryCityRegionSelector } from '../components/common/CountryCityRegionSelector';
+import { findCountryByName, getCountryLocationDetails } from '../data/countriesData';
 import { 
   User, 
   Briefcase, 
@@ -48,12 +49,25 @@ import {
   Printer,
   Loader2,
   Image as ImageIcon,
-  ExternalLink
+  ExternalLink,
+  Zap,
+  ArrowRight,
+  RefreshCw,
+  Lightbulb
 } from 'lucide-react';
+import { 
+  generateTailoredAiResume, 
+  POPULAR_OCCUPATIONS, 
+  AGE_GROUPS, 
+  EMPLOYMENT_STATUSES 
+} from '../data/aiGenerator';
 
 interface CreatePageProps {
   initialCv: ResumeData;
   onNavigate: (route: string) => void;
+  initialOpenGenerator?: boolean;
+  onCloseGenerator?: () => void;
+  onCvGenerated?: (generatedCv: ResumeData) => void;
 }
 
 const COLOR_OPTIONS = [
@@ -77,7 +91,13 @@ const TEMPLATE_OPTIONS: { id: CvTemplate; label: string; desc: string }[] = [
   { id: 'compact', label: 'Compact', desc: 'Dense 1-page high yield' },
 ];
 
-export const CreatePage: React.FC<CreatePageProps> = ({ initialCv, onNavigate }) => {
+export const CreatePage: React.FC<CreatePageProps> = ({ 
+  initialCv, 
+  onNavigate,
+  initialOpenGenerator = false,
+  onCloseGenerator,
+  onCvGenerated
+}) => {
   const [cv, setCv] = useState<ResumeData>(initialCv);
   const [activeTab, setActiveTab] = useState<'personal' | 'summary' | 'experience' | 'education' | 'skills' | 'certifications' | 'projects' | 'attachments' | 'theme'>('personal');
   const [savedSuccess, setSavedSuccess] = useState(false);
@@ -89,6 +109,155 @@ export const CreatePage: React.FC<CreatePageProps> = ({ initialCv, onNavigate })
   const [selectedDocForPreview, setSelectedDocForPreview] = useState<DocumentAttachment | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
+
+  // AI Resume Generator Modal & Controls
+  const [isGeneratorModalOpen, setIsGeneratorModalOpen] = useState(initialOpenGenerator);
+  const [isGeneratingCv, setIsGeneratingCv] = useState(false);
+  const [generatingSection, setGeneratingSection] = useState<string | null>(null);
+  const [generationNotice, setGenerationNotice] = useState<string | null>(null);
+
+  // Quick generator form fields (synced with cv)
+  const [modalJobTitle, setModalJobTitle] = useState(cv.personalInfo.jobTitle || '');
+  const [modalFullName, setModalFullName] = useState(cv.personalInfo.fullName || '');
+  const [modalCountry, setModalCountry] = useState(cv.personalInfo.country || 'United States');
+  const [modalCity, setModalCity] = useState(cv.personalInfo.city || (cv.personalInfo.location ? cv.personalInfo.location.split(',')[0].trim() : 'Washington, D.C.'));
+  const [modalRegion, setModalRegion] = useState(cv.personalInfo.region || 'North America');
+  const [modalAgeGroup, setModalAgeGroup] = useState('23-29');
+  const [modalEmploymentStatus, setModalEmploymentStatus] = useState('employed');
+
+  // If initialOpenGenerator flag changes, trigger modal
+  useEffect(() => {
+    if (initialOpenGenerator) {
+      setIsGeneratorModalOpen(true);
+    }
+  }, [initialOpenGenerator]);
+
+  // Keep modal fields synced when cv.personalInfo changes
+  useEffect(() => {
+    if (cv.personalInfo.jobTitle && !modalJobTitle) {
+      setModalJobTitle(cv.personalInfo.jobTitle);
+    }
+    if (cv.personalInfo.fullName && !modalFullName) {
+      setModalFullName(cv.personalInfo.fullName);
+    }
+    if (cv.personalInfo.country && modalCountry === 'United States') {
+      setModalCountry(cv.personalInfo.country);
+      const details = getCountryLocationDetails(cv.personalInfo.country);
+      setModalCity(cv.personalInfo.city || details.city);
+      setModalRegion(cv.personalInfo.region || details.region);
+    }
+  }, [cv.personalInfo.jobTitle, cv.personalInfo.fullName, cv.personalInfo.country]);
+
+  // Handler to generate complete CV with AI based on details
+  const handleGenerateFullCv = (params?: {
+    jobTitle?: string;
+    fullName?: string;
+    country?: string;
+    city?: string;
+    region?: string;
+    ageGroup?: string;
+    employmentStatus?: string;
+  }) => {
+    setIsGeneratingCv(true);
+
+    const titleToUse = params?.jobTitle?.trim() || modalJobTitle.trim() || cv.personalInfo.jobTitle?.trim() || 'Software Engineer';
+    const nameToUse = params?.fullName?.trim() || modalFullName.trim() || cv.personalInfo.fullName?.trim();
+    const countryToUse = params?.country?.trim() || modalCountry.trim() || cv.personalInfo.country?.trim() || 'United States';
+    const cityToUse = params?.city?.trim() || modalCity.trim() || cv.personalInfo.city || (cv.personalInfo.location ? cv.personalInfo.location.split(',')[0].trim() : '');
+    const regionToUse = params?.region?.trim() || modalRegion.trim() || cv.personalInfo.region || '';
+    const ageGroupToUse = params?.ageGroup || modalAgeGroup || '23-29';
+    const employmentStatusToUse = params?.employmentStatus || modalEmploymentStatus || 'employed';
+
+    setTimeout(() => {
+      try {
+        const generated = generateTailoredAiResume({
+          country: countryToUse,
+          city: cityToUse,
+          region: regionToUse,
+          ageGroup: ageGroupToUse,
+          occupation: titleToUse,
+          customOccupation: titleToUse,
+          employmentStatus: employmentStatusToUse,
+          overridePersonalInfo: {
+            ...cv.personalInfo,
+            fullName: nameToUse || cv.personalInfo.fullName,
+            jobTitle: titleToUse,
+            country: countryToUse,
+            city: cityToUse,
+            region: regionToUse,
+            location: cityToUse ? `${cityToUse}, ${countryToUse}` : countryToUse
+          }
+        });
+
+        const fullGeneratedCv: ResumeData = {
+          ...generated,
+          id: cv.id || generated.id,
+          title: `${nameToUse || cv.personalInfo.fullName || 'Professional'} — ${titleToUse}`,
+          // Preserve any existing photo and uploaded attachments
+          personalInfo: {
+            ...generated.personalInfo,
+            photoUrl: cv.personalInfo.photoUrl,
+          },
+          documentImages: cv.documentImages,
+        };
+
+        setCv(fullGeneratedCv);
+        saveDraftToStorage(fullGeneratedCv);
+        saveResumeToList(fullGeneratedCv);
+
+        setGenerationNotice(`CV generated successfully for "${titleToUse}"! Redirecting to your rendered CV...`);
+        setIsGeneratorModalOpen(false);
+        if (onCloseGenerator) onCloseGenerator();
+
+        if (onCvGenerated) {
+          onCvGenerated(fullGeneratedCv);
+        } else {
+          onNavigate('/view-cv');
+        }
+      } finally {
+        setIsGeneratingCv(false);
+      }
+    }, 450);
+  };
+
+  // Handler to generate a specific section with AI
+  const handleGenerateSection = (section: 'summary' | 'experience' | 'education' | 'skills' | 'certifications') => {
+    setGeneratingSection(section);
+    const titleToUse = cv.personalInfo.jobTitle?.trim() || 'Software Engineer';
+    const countryToUse = cv.personalInfo.country?.trim() || 'United States';
+
+    setTimeout(() => {
+      try {
+        const generated = generateTailoredAiResume({
+          country: countryToUse,
+          ageGroup: '23-29',
+          occupation: titleToUse,
+          customOccupation: titleToUse,
+          employmentStatus: 'employed',
+          overridePersonalInfo: cv.personalInfo,
+        });
+
+        if (section === 'summary') {
+          setCv(prev => ({ ...prev, summary: generated.summary, updatedAt: Date.now() }));
+          setGenerationNotice('Professional summary generated tailored to your job title!');
+        } else if (section === 'experience') {
+          setCv(prev => ({ ...prev, experience: generated.experience, updatedAt: Date.now() }));
+          setGenerationNotice('3 tailored work experiences added with quantifiable metrics!');
+        } else if (section === 'education') {
+          setCv(prev => ({ ...prev, education: generated.education, updatedAt: Date.now() }));
+          setGenerationNotice(`Education updated with localized university in ${countryToUse}!`);
+        } else if (section === 'skills') {
+          setCv(prev => ({ ...prev, skills: generated.skills, updatedAt: Date.now() }));
+          setGenerationNotice('Relevant technical & soft skills added for your role!');
+        } else if (section === 'certifications') {
+          setCv(prev => ({ ...prev, certifications: generated.certifications, updatedAt: Date.now() }));
+          setGenerationNotice('Recognized industry certifications added!');
+        }
+      } finally {
+        setGeneratingSection(null);
+      }
+    }, 350);
+  };
 
   const handleDownloadPdf = async () => {
     setIsExporting(true);
@@ -458,6 +627,39 @@ export const CreatePage: React.FC<CreatePageProps> = ({ initialCv, onNavigate })
             </div>
 
             <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+              {/* Instant AI Resume Generator Trigger Button */}
+              <button
+                type="button"
+                onClick={() => setIsGeneratorModalOpen(true)}
+                className="flex items-center gap-1.5 px-3 sm:px-3.5 py-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-800 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-blue-500/20 hover:shadow-lg active:scale-95 group"
+                id="btn-top-generate-cv"
+                title="Generate complete resume tailored with AI"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-300 group-hover:rotate-12 transition-transform" />
+                <span className="hidden xs:inline">Generate CV</span>
+                <span className="xs:hidden">Generate</span>
+              </button>
+
+              {/* View Full Rendered CV Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  saveResumeToList(cv);
+                  if (onCvGenerated) {
+                    onCvGenerated(cv);
+                  } else {
+                    onNavigate('/view-cv');
+                  }
+                }}
+                className="flex items-center gap-1.5 px-3 sm:px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition-all shadow-xs"
+                id="btn-top-view-cv"
+                title="Open full dedicated page for this CV"
+              >
+                <Eye className="w-3.5 h-3.5 text-indigo-600" />
+                <span className="hidden xs:inline">View CV</span>
+                <span className="xs:hidden">View</span>
+              </button>
+
               {/* Save to Local list */}
               <button
                 onClick={handleSaveToList}
@@ -555,6 +757,23 @@ export const CreatePage: React.FC<CreatePageProps> = ({ initialCv, onNavigate })
       <div className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-8 py-6 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* LEFT COLUMN: Section Editor (lg:col-span-6) */}
         <div className={`lg:col-span-6 min-w-0 w-full space-y-5 ${mobilePreviewOpen ? 'hidden lg:block' : 'block'}`}>
+          {/* Generation Notice Alert Banner */}
+          {generationNotice && (
+            <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 border border-emerald-200 text-emerald-900 px-4 py-3 rounded-2xl flex items-center justify-between gap-3 shadow-xs animate-in fade-in slide-in-from-top-2">
+              <div className="flex items-center gap-2.5">
+                <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                <span className="text-xs sm:text-sm font-semibold">{generationNotice}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setGenerationNotice(null)}
+                className="text-emerald-700 hover:text-emerald-900 text-xs font-bold px-2.5 py-1 hover:bg-emerald-100 rounded-lg transition-colors shrink-0"
+              >
+                Dismiss
+              </button>
+            </div>
+          )}
+
           {/* Resume Strength Score Widget */}
           <div className="no-print bg-white rounded-3xl p-4 sm:p-5 border border-slate-200/90 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] relative overflow-hidden">
             <div className="flex items-center justify-between gap-3 mb-2.5">
@@ -651,9 +870,47 @@ export const CreatePage: React.FC<CreatePageProps> = ({ initialCv, onNavigate })
           {/* TAB 1: Personal Information */}
           {activeTab === 'personal' && (
             <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-xs space-y-6">
-              <div>
-                <h2 className="text-xl font-black text-slate-900">Personal Information</h2>
-                <p className="text-xs text-slate-500 mt-0.5">Your contact details, profile photo, and header presence.</p>
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <div>
+                  <h2 className="text-xl font-black text-slate-900">Personal Information</h2>
+                  <p className="text-xs text-slate-500 mt-0.5">Your contact details, profile photo, and header presence.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsGeneratorModalOpen(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-bold transition-all shrink-0 group"
+                  id="btn-open-generator-personal-top"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-blue-600 group-hover:rotate-12 transition-transform" />
+                  <span>⚡ Quick Generate with AI</span>
+                </button>
+              </div>
+
+              {/* Instant AI CV Generator Callout Card */}
+              <div className="bg-gradient-to-br from-blue-50/90 via-indigo-50/70 to-sky-50/80 rounded-2xl p-4 sm:p-5 border border-blue-200/80 shadow-2xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-start gap-3.5">
+                  <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-blue-500/20">
+                    <Sparkles className="w-5 h-5 text-amber-300" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-extrabold text-slate-900">Instant AI CV Generator</span>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-600 text-white shadow-2xs">Fast Track</span>
+                    </div>
+                    <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                      Fill your <strong>Full Name</strong>, <strong>Job Title</strong>, and <strong>Country</strong> below. As soon as you type them, click the generate button to auto-create your entire resume.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsGeneratorModalOpen(true)}
+                  className="w-full sm:w-auto px-4 py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl text-xs font-bold shadow-md shadow-blue-600/20 transition-all flex items-center justify-center gap-2 shrink-0 group hover:scale-[1.02]"
+                  id="btn-generator-fast-track"
+                >
+                  <Sparkles className="w-4 h-4 text-amber-300 group-hover:rotate-12 transition-transform" />
+                  <span>Generate My CV</span>
+                </button>
               </div>
 
               {/* Profile Photo Upload Section */}
@@ -764,53 +1021,31 @@ export const CreatePage: React.FC<CreatePageProps> = ({ initialCv, onNavigate })
                   />
                 </div>
 
-                {/* Country / Territory */}
-                <div className="sm:col-span-1">
-                  <CountrySelector
-                    label="Country / Territory"
-                    value={cv.personalInfo.country || ''}
-                    onChange={(countryName) => {
-                      const cInfo = findCountryByName(countryName);
-                      setCv(prev => {
-                        let newLoc = prev.personalInfo.location;
-                        let newPhone = prev.personalInfo.phone;
-                        if (!newLoc && cInfo?.capital) {
-                          newLoc = `${cInfo.capital}, ${countryName}`;
-                        } else if (newLoc && !newLoc.includes(countryName) && cInfo?.capital) {
-                          newLoc = `${newLoc.split(',')[0].trim()}, ${countryName}`;
-                        }
-                        if (!newPhone && cInfo?.phonePrefix) {
-                          newPhone = `${cInfo.phonePrefix} `;
-                        }
-                        return {
-                          ...prev,
-                          personalInfo: {
-                            ...prev.personalInfo,
-                            country: countryName,
-                            location: newLoc,
-                            phone: newPhone
-                          },
-                          updatedAt: Date.now()
-                        };
-                      });
+                {/* Country, City & Region Selector */}
+                <div className="sm:col-span-2 bg-slate-50/70 p-4 sm:p-5 rounded-2xl border border-slate-200/90">
+                  <CountryCityRegionSelector
+                    country={cv.personalInfo.country || 'United States'}
+                    city={cv.personalInfo.city}
+                    region={cv.personalInfo.region}
+                    location={cv.personalInfo.location}
+                    phone={cv.personalInfo.phone}
+                    onChange={(payload) => {
+                      setCv(prev => ({
+                        ...prev,
+                        personalInfo: {
+                          ...prev.personalInfo,
+                          country: payload.country,
+                          city: payload.city,
+                          region: payload.region,
+                          location: payload.location,
+                          phone: payload.phone || prev.personalInfo.phone
+                        },
+                        updatedAt: Date.now()
+                      }));
                     }}
-                    showRandomButton={true}
-                    id="create-cv-country"
-                  />
-                </div>
-
-                {/* City, State / Region */}
-                <div className="sm:col-span-1">
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                    City, State / Region
-                  </label>
-                  <input
-                    type="text"
-                    value={cv.personalInfo.location}
-                    onChange={(e) => updatePersonalInfo('location', e.target.value)}
-                    placeholder="e.g. Austin, TX or London"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500"
-                    id="input-location"
+                    idPrefix="create-cv-loc"
+                    showQuickCities={true}
+                    showRegionField={true}
                   />
                 </div>
 
@@ -850,15 +1085,162 @@ export const CreatePage: React.FC<CreatePageProps> = ({ initialCv, onNavigate })
                   />
                 </div>
               </div>
+
+              {/* DYNAMIC GENERATE OF CV CARD: Brings out once details are filled */}
+              {(Boolean(cv.personalInfo.jobTitle?.trim() || cv.personalInfo.fullName?.trim() || cv.personalInfo.country)) && (
+                <div 
+                  id="card-details-filled-generate-cv"
+                  className="p-5 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 text-white shadow-xl shadow-blue-600/25 border border-blue-400/40 flex flex-col sm:flex-row items-center justify-between gap-4 animate-in fade-in slide-in-from-top-3 transition-all"
+                >
+                  <div className="flex items-center gap-3.5">
+                    <div className="w-11 h-11 rounded-2xl bg-white/20 backdrop-blur-xs flex items-center justify-center text-white shrink-0 shadow-inner">
+                      <Sparkles className="w-6 h-6 text-amber-300 animate-pulse" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-black uppercase tracking-wider bg-white/20 px-2.5 py-0.5 rounded-full text-blue-100">
+                          Details Entered
+                        </span>
+                        <span className="text-xs text-blue-200">Ready to Generate CV</span>
+                      </div>
+                      <div className="text-sm sm:text-base font-black text-white mt-1">
+                        Generate CV for: <span className="text-amber-300 underline decoration-amber-400/60">{cv.personalInfo.jobTitle || cv.personalInfo.fullName || 'Professional'}</span>
+                        {cv.personalInfo.country ? <span className="text-blue-100 font-normal"> ({cv.personalInfo.country})</span> : ''}
+                      </div>
+                      <p className="text-xs text-blue-100 mt-0.5">
+                        Auto-populate targeted summary, 3 realistic jobs with achievements, university education, and skills.
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => handleGenerateFullCv({
+                      jobTitle: cv.personalInfo.jobTitle,
+                      fullName: cv.personalInfo.fullName,
+                      country: cv.personalInfo.country,
+                    })}
+                    disabled={isGeneratingCv}
+                    className="w-full sm:w-auto px-5 py-3.5 bg-white text-blue-700 hover:bg-blue-50 active:bg-blue-100 rounded-xl font-black text-xs sm:text-sm shadow-lg shadow-black/15 transition-all flex items-center justify-center gap-2 shrink-0 group hover:scale-[1.03] active:scale-95"
+                    id="btn-generate-cv-from-details"
+                  >
+                    {isGeneratingCv ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin text-blue-700" />
+                        <span>Generating CV...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4 text-amber-500 group-hover:rotate-12 transition-transform" />
+                        <span>⚡ Generate My CV</span>
+                        <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
+
+              {/* Bottom AI Generation Panel with Career Stage & Status */}
+              <div className="pt-5 border-t border-slate-100 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-blue-600" />
+                      <span>Custom AI CV Generator</span>
+                    </h3>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      Configure your experience level and let AI synthesize your entire resume in one click.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-600 mb-1">Experience Level</label>
+                    <select
+                      value={modalAgeGroup}
+                      onChange={(e) => setModalAgeGroup(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs sm:text-sm bg-white focus:ring-2 focus:ring-blue-500"
+                      id="select-experience-level-personal"
+                    >
+                      <option value="18-22">Student / Intern (0-1 yrs)</option>
+                      <option value="23-29">Early Career / Mid-Level (2-5 yrs)</option>
+                      <option value="30-39">Senior Specialist (6-10 yrs)</option>
+                      <option value="40-49">Lead / Department Head (11-15 yrs)</option>
+                      <option value="50+">Executive / Director (15+ yrs)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-600 mb-1">Employment Status</label>
+                    <select
+                      value={modalEmploymentStatus}
+                      onChange={(e) => setModalEmploymentStatus(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs sm:text-sm bg-white focus:ring-2 focus:ring-blue-500"
+                      id="select-employment-status-personal"
+                    >
+                      <option value="employed">Full-Time Employed</option>
+                      <option value="unemployed">Actively Seeking Role</option>
+                      <option value="recent_grad">Recent Graduate</option>
+                      <option value="freelancer">Freelancer / Consultant</option>
+                      <option value="career_changer">Career Transition</option>
+                    </select>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => handleGenerateFullCv({
+                    jobTitle: cv.personalInfo.jobTitle,
+                    fullName: cv.personalInfo.fullName,
+                    country: cv.personalInfo.country,
+                    ageGroup: modalAgeGroup,
+                    employmentStatus: modalEmploymentStatus,
+                  })}
+                  disabled={isGeneratingCv}
+                  className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 active:from-blue-800 active:to-indigo-800 text-white rounded-2xl font-bold text-xs sm:text-sm shadow-md shadow-blue-600/20 hover:shadow-lg transition-all flex items-center justify-center gap-2 group"
+                  id="btn-generate-complete-cv-bottom"
+                >
+                  {isGeneratingCv ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin text-white" />
+                      <span>Generating Complete CV...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4 text-amber-300 group-hover:rotate-12 transition-transform" />
+                      <span>Generate Complete CV from Details</span>
+                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           )}
 
           {/* TAB 2: Summary */}
           {activeTab === 'summary' && (
             <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-xs space-y-5">
-              <div>
-                <h2 className="text-xl font-black text-slate-900">Professional Summary</h2>
-                <p className="text-xs text-slate-500 mt-0.5">A concise overview of your background, strengths, and career highlights.</p>
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <div>
+                  <h2 className="text-xl font-black text-slate-900">Professional Summary</h2>
+                  <p className="text-xs text-slate-500 mt-0.5">A concise overview of your background, strengths, and career highlights.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleGenerateSection('summary')}
+                  disabled={generatingSection === 'summary'}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-bold transition-all shrink-0"
+                  id="btn-generate-summary-ai"
+                  title="Generate targeted summary based on your Job Title and Country"
+                >
+                  {generatingSection === 'summary' ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+                  )}
+                  <span>Auto-Generate Summary with AI</span>
+                </button>
               </div>
 
               <div>
@@ -877,19 +1259,36 @@ export const CreatePage: React.FC<CreatePageProps> = ({ initialCv, onNavigate })
           {/* TAB 3: Work Experience */}
           {activeTab === 'experience' && (
             <div className="space-y-4">
-              <div className="flex justify-between items-center">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <div>
                   <h2 className="text-xl font-black text-slate-900">Work Experience</h2>
                   <p className="text-xs text-slate-500">Add, edit, or reorder your employment history.</p>
                 </div>
-                <button
-                  onClick={addExperience}
-                  className="flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl text-xs font-bold transition-all shadow-xs"
-                  id="btn-add-experience"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>Add Role</span>
-                </button>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={() => handleGenerateSection('experience')}
+                    disabled={generatingSection === 'experience'}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-bold transition-all shadow-2xs"
+                    id="btn-generate-experience-ai"
+                    title="Auto-generate 3 realistic employment roles with quantifiable metrics"
+                  >
+                    {generatingSection === 'experience' ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+                    )}
+                    <span>Auto-Generate 3 Roles</span>
+                  </button>
+                  <button
+                    onClick={addExperience}
+                    className="flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl text-xs font-bold transition-all shadow-xs"
+                    id="btn-add-experience"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Add Role</span>
+                  </button>
+                </div>
               </div>
 
               {cv.experience.length === 0 ? (
@@ -1028,19 +1427,36 @@ export const CreatePage: React.FC<CreatePageProps> = ({ initialCv, onNavigate })
           {/* TAB 4: Education */}
           {activeTab === 'education' && (
             <div className="space-y-4">
-              <div className="flex justify-between items-center">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <div>
                   <h2 className="text-xl font-black text-slate-900">Education</h2>
                   <p className="text-xs text-slate-500">Your academic degrees, colleges, and honors.</p>
                 </div>
-                <button
-                  onClick={addEducation}
-                  className="flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs"
-                  id="btn-add-education"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>Add Degree</span>
-                </button>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={() => handleGenerateSection('education')}
+                    disabled={generatingSection === 'education'}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-bold transition-all shadow-2xs"
+                    id="btn-generate-education-ai"
+                    title={`Auto-generate academic history in ${cv.personalInfo.country || 'your country'}`}
+                  >
+                    {generatingSection === 'education' ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+                    )}
+                    <span>Auto-Generate Education</span>
+                  </button>
+                  <button
+                    onClick={addEducation}
+                    className="flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs"
+                    id="btn-add-education"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Add Degree</span>
+                  </button>
+                </div>
               </div>
 
               {cv.education.map((edu, index) => (
@@ -1142,9 +1558,26 @@ export const CreatePage: React.FC<CreatePageProps> = ({ initialCv, onNavigate })
           {/* TAB 5: Skills */}
           {activeTab === 'skills' && (
             <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-xs space-y-6">
-              <div>
-                <h2 className="text-xl font-black text-slate-900">Skills & Competencies</h2>
-                <p className="text-xs text-slate-500 mt-0.5">Type a skill and press Enter or click Add.</p>
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <div>
+                  <h2 className="text-xl font-black text-slate-900">Skills & Competencies</h2>
+                  <p className="text-xs text-slate-500 mt-0.5">Type a skill and press Enter or click Add.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleGenerateSection('skills')}
+                  disabled={generatingSection === 'skills'}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-bold transition-all shadow-2xs shrink-0"
+                  id="btn-generate-skills-ai"
+                  title="Auto-generate relevant industry skills"
+                >
+                  {generatingSection === 'skills' ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+                  )}
+                  <span>Auto-Generate Role Skills</span>
+                </button>
               </div>
 
               {/* Add Input */}
@@ -1210,18 +1643,35 @@ export const CreatePage: React.FC<CreatePageProps> = ({ initialCv, onNavigate })
           {/* TAB 6: Certifications */}
           {activeTab === 'certifications' && (
             <div className="space-y-4">
-              <div className="flex justify-between items-center">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <div>
                   <h2 className="text-xl font-black text-slate-900">Certifications & Credentials</h2>
                   <p className="text-xs text-slate-500">Professional credentials, licenses, and verified certifications.</p>
                 </div>
-                <button
-                  onClick={addCertification}
-                  className="flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>Add Certification</span>
-                </button>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={() => handleGenerateSection('certifications')}
+                    disabled={generatingSection === 'certifications'}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-bold transition-all shadow-2xs"
+                    id="btn-generate-certs-ai"
+                    title="Auto-generate recognized credentials for this role"
+                  >
+                    {generatingSection === 'certifications' ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+                    )}
+                    <span>Auto-Generate Certifications</span>
+                  </button>
+                  <button
+                    onClick={addCertification}
+                    className="flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Add Certification</span>
+                  </button>
+                </div>
               </div>
 
               {cv.certifications.map((cert) => (
@@ -1599,6 +2049,219 @@ export const CreatePage: React.FC<CreatePageProps> = ({ initialCv, onNavigate })
                 alt={selectedDocForPreview.name}
                 className="max-w-full max-h-[65vh] object-contain rounded-lg shadow-md"
               />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Instant AI CV Generator Modal */}
+      {isGeneratorModalOpen && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-xs no-print overflow-y-auto"
+          onClick={() => {
+            setIsGeneratorModalOpen(false);
+            if (onCloseGenerator) onCloseGenerator();
+          }}
+        >
+          <div 
+            className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl space-y-5 my-8 border border-slate-100 flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150 relative"
+            onClick={(e) => e.stopPropagation()}
+            id="modal-ai-cv-generator"
+          >
+            {/* Modal Header */}
+            <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
+              <div className="flex items-center gap-3.5">
+                <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-lg shadow-blue-500/25 shrink-0">
+                  <Sparkles className="w-6 h-6 text-amber-300 animate-pulse" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-black text-slate-900">Generate Your CV with AI</h3>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">
+                      Instant
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
+                    Enter your name and target profession. Our AI will synthesize a complete, ATS-friendly CV with tailored summary, 3 realistic jobs, local education, and skills.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsGeneratorModalOpen(false);
+                  if (onCloseGenerator) onCloseGenerator();
+                }}
+                className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors shrink-0"
+                title="Close"
+                id="btn-close-generator-modal"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Quick Role Suggestions */}
+            <div className="space-y-2">
+              <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                Quick Role Suggestions
+              </label>
+              <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto pr-1">
+                {[
+                  'Software Engineer',
+                  'Roboticist & AI Tech',
+                  'Civil Engineer',
+                  'Registered Nurse (RN)',
+                  'Certified Public Accountant',
+                  'Financial Analyst',
+                  'Project Manager',
+                  'Data Scientist',
+                  'Digital Marketing Specialist',
+                  'High School Educator'
+                ].map((role) => (
+                  <button
+                    key={role}
+                    type="button"
+                    onClick={() => setModalJobTitle(role)}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
+                      modalJobTitle === role
+                        ? 'bg-blue-600 text-white shadow-xs scale-102'
+                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    }`}
+                  >
+                    {role}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Generator Form Inputs */}
+            <div className="space-y-3.5">
+              {/* Full Name */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Your Full Name
+                </label>
+                <input
+                  type="text"
+                  value={modalFullName}
+                  onChange={(e) => setModalFullName(e.target.value)}
+                  placeholder="e.g. Jordan Mitchell"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
+                  id="modal-input-fullname"
+                />
+              </div>
+
+              {/* Target Job Title */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Target Job Title / Profession <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={modalJobTitle}
+                  onChange={(e) => setModalJobTitle(e.target.value)}
+                  placeholder="e.g. Senior Software Architect, Registered Nurse, Product Lead..."
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-semibold text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
+                  id="modal-input-jobtitle"
+                />
+              </div>
+
+              {/* Country, City & Region Selector */}
+              <div className="bg-slate-50/70 p-3.5 rounded-2xl border border-slate-200">
+                <CountryCityRegionSelector
+                  country={modalCountry}
+                  city={modalCity}
+                  region={modalRegion}
+                  onChange={(payload) => {
+                    setModalCountry(payload.country);
+                    setModalCity(payload.city);
+                    setModalRegion(payload.region);
+                  }}
+                  idPrefix="modal-cv-loc"
+                  compact={true}
+                  showQuickCities={true}
+                  showRegionField={true}
+                />
+              </div>
+
+              {/* Two columns: Experience level & status */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 mb-1">Experience Level</label>
+                  <select
+                    value={modalAgeGroup}
+                    onChange={(e) => setModalAgeGroup(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs bg-white focus:ring-2 focus:ring-blue-500"
+                    id="modal-select-experience"
+                  >
+                    <option value="18-22">Student / Intern (0-1 yrs exp)</option>
+                    <option value="23-29">Early Career / Mid (2-5 yrs exp)</option>
+                    <option value="30-39">Senior Professional (6-10 yrs exp)</option>
+                    <option value="40-49">Lead / Head of Dept (11-15 yrs exp)</option>
+                    <option value="50+">Executive / VP (15+ yrs exp)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 mb-1">Employment Status</label>
+                  <select
+                    value={modalEmploymentStatus}
+                    onChange={(e) => setModalEmploymentStatus(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs bg-white focus:ring-2 focus:ring-blue-500"
+                    id="modal-select-status"
+                  >
+                    <option value="employed">Full-Time Employed</option>
+                    <option value="unemployed">Actively Seeking Role</option>
+                    <option value="recent_grad">Recent Graduate</option>
+                    <option value="freelancer">Freelancer / Consultant</option>
+                    <option value="career_changer">Career Transition</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Actions */}
+            <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-end gap-2.5">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsGeneratorModalOpen(false);
+                  if (onCloseGenerator) onCloseGenerator();
+                }}
+                className="w-full sm:w-auto px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors"
+                id="btn-cancel-modal-generator"
+              >
+                I'll write manually
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleGenerateFullCv({
+                  jobTitle: modalJobTitle,
+                  fullName: modalFullName,
+                  country: modalCountry,
+                  city: modalCity,
+                  region: modalRegion,
+                  ageGroup: modalAgeGroup,
+                  employmentStatus: modalEmploymentStatus,
+                })}
+                disabled={isGeneratingCv}
+                className="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-800 active:from-blue-800 text-white rounded-xl text-xs sm:text-sm font-bold shadow-lg shadow-blue-500/25 hover:shadow-xl transition-all flex items-center justify-center gap-2 disabled:opacity-70 group"
+                id="btn-submit-modal-generate"
+              >
+                {isGeneratingCv ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Generating Tailored CV...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4 text-amber-300 group-hover:rotate-12 transition-transform" />
+                    <span>⚡ Generate My CV Now</span>
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>

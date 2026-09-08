@@ -143,6 +143,8 @@ export interface RoboticPersonalInfo {
   phone: string;
   location: string;
   country: string;
+  city?: string;
+  region?: string;
   linkedin?: string;
   portfolio?: string;
   github?: string;

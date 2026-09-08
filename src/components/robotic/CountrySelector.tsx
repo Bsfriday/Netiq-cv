@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Search, Globe, ChevronDown, Check, Shuffle, X, Sparkles } from 'lucide-react';
-import { ALL_COUNTRIES, CountryInfo, getRandomCountry } from '../../data/countriesData';
+import { ALL_COUNTRIES, CountryInfo, getRandomCountry, findCountryByName } from '../../data/countriesData';
 
 export function getFlagEmoji(alpha2: string): string {
   if (!alpha2 || alpha2.length !== 2) return '🌐';
@@ -13,9 +13,9 @@ export function getFlagEmoji(alpha2: string): string {
 
 interface CountrySelectorProps {
   value: string;
-  onChange: (countryName: string) => void;
+  onChange: (countryName: string, countryInfo?: CountryInfo) => void;
   showRandomButton?: boolean;
-  onRandomSelect?: (countryName: string) => void;
+  onRandomSelect?: (countryName: string, countryInfo?: CountryInfo) => void;
   allowAnyRandom?: boolean;
   id?: string;
   label?: string;
@@ -128,7 +128,8 @@ export const CountrySelector: React.FC<CountrySelectorProps> = ({
   };
 
   const handleSelect = (countryName: string) => {
-    onChange(countryName);
+    const info = findCountryByName(countryName);
+    onChange(countryName, info);
     setIsOpen(false);
     setSearchQuery('');
   };
@@ -137,9 +138,9 @@ export const CountrySelector: React.FC<CountrySelectorProps> = ({
     e.stopPropagation();
     const random = getRandomCountry();
     if (onRandomSelect) {
-      onRandomSelect(random.name);
+      onRandomSelect(random.name, random);
     } else {
-      onChange(random.name);
+      onChange(random.name, random);
     }
   };
 
