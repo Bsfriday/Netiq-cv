@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Sparkles, 
   Globe, 
@@ -15,6 +15,7 @@ import {
   ZoomIn, 
   ZoomOut, 
   ArrowRight,
+  ArrowLeft,
   ChevronDown,
   Loader2,
   Layers,
@@ -40,26 +41,63 @@ import { triggerReviewPrompt } from '../utils/reviewStorage';
 interface AiGeneratorPageProps {
   onEditCv: (cv: ResumeData) => void;
   onNavigate: (route: string) => void;
+  initialProfession?: string;
 }
 
-export const AiGeneratorPage: React.FC<AiGeneratorPageProps> = ({ onEditCv, onNavigate }) => {
+export const AiGeneratorPage: React.FC<AiGeneratorPageProps> = ({ 
+  onEditCv, 
+  onNavigate,
+  initialProfession 
+}) => {
+  // Determine initial occupation from initialProfession if passed
+  const findMatchingOccupation = (title?: string) => {
+    if (!title) return undefined;
+    const lower = title.toLowerCase().trim();
+    return POPULAR_OCCUPATIONS.find(o => o.title.toLowerCase() === lower)
+      || POPULAR_OCCUPATIONS.find(o => o.id === lower)
+      || POPULAR_OCCUPATIONS.find(o => lower.includes(o.title.toLowerCase()) || o.title.toLowerCase().includes(lower));
+  };
+
+  const initialMatch = findMatchingOccupation(initialProfession);
+  const defaultOccupation = initialMatch ? initialMatch.title : (initialProfession ? POPULAR_OCCUPATIONS[0].title : 'Software Engineer');
+  const defaultCustom = (!initialMatch && initialProfession) ? initialProfession : '';
+
   // Input states for the 5 parameters
   const [selectedCountry, setSelectedCountry] = useState<string>('United States');
   const [selectedAgeGroup, setSelectedAgeGroup] = useState<string>('23-29');
-  const [selectedOccupation, setSelectedOccupation] = useState<string>('Software Engineer');
+  const [selectedOccupation, setSelectedOccupation] = useState<string>(defaultOccupation);
   const [selectedEmploymentStatus, setSelectedEmploymentStatus] = useState<string>('employed');
-  const [customOccupation, setCustomOccupation] = useState<string>('');
+  const [customOccupation, setCustomOccupation] = useState<string>(defaultCustom);
 
   // Generated Resume & Preview Controls
   const [generatedCv, setGeneratedCv] = useState<ResumeData | null>(() => {
-    // Generate an initial high-quality sample on load
     return generateTailoredAiResume({
       country: 'United States',
       ageGroup: '23-29',
-      occupation: 'Software Engineer',
-      employmentStatus: 'employed'
+      occupation: defaultOccupation,
+      employmentStatus: 'employed',
+      customOccupation: defaultCustom.trim() || undefined
     });
   });
+
+  // Sync if initialProfession prop changes
+  useEffect(() => {
+    if (initialProfession) {
+      const match = findMatchingOccupation(initialProfession);
+      const occ = match ? match.title : POPULAR_OCCUPATIONS[0].title;
+      const custom = !match ? initialProfession : '';
+      setSelectedOccupation(occ);
+      setCustomOccupation(custom);
+      const updatedCv = generateTailoredAiResume({
+        country: selectedCountry,
+        ageGroup: selectedAgeGroup,
+        occupation: occ,
+        employmentStatus: selectedEmploymentStatus,
+        customOccupation: custom.trim() || undefined
+      });
+      setGeneratedCv(updatedCv);
+    }
+  }, [initialProfession]);
 
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [isExporting, setIsExporting] = useState<boolean>(false);
@@ -195,7 +233,16 @@ export const AiGeneratorPage: React.FC<AiGeneratorPageProps> = ({ onEditCv, onNa
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-3">
           {/* Title & Brand */}
           <div className="flex items-center gap-2.5 w-full sm:w-auto">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-600 to-blue-600 flex items-center justify-center text-white shadow-xs">
+            <button
+              onClick={() => onNavigate('/resume/type-selection')}
+              className="p-1.5 rounded-xl text-slate-500 hover:text-blue-600 hover:bg-blue-50 border border-slate-200 hover:border-blue-200 transition-all flex items-center gap-1 text-xs font-bold shrink-0"
+              title="Browse all resume categories and types"
+              id="btn-back-to-types"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">All Types</span>
+            </button>
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-600 to-blue-600 flex items-center justify-center text-white shadow-xs shrink-0">
               <Sparkles className="w-4 h-4" />
             </div>
             <div>

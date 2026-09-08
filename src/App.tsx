@@ -14,18 +14,32 @@ import { SamplesPage } from './pages/SamplesPage';
 import { SavedPage } from './pages/SavedPage';
 import { AiGeneratorPage } from './pages/AiGeneratorPage';
 import { RoboticResumePage } from './pages/RoboticResumePage';
+import { ResumeTypeSelectionPage } from './pages/ResumeTypeSelectionPage';
+import { ResumeTypeItem, resolveResumeRoute } from './data/resumeTypes';
 import { ReviewPromptModal } from './components/common/ReviewPromptModal';
 import { UserReview } from './utils/reviewStorage';
 
 export default function App() {
+  const VALID_ROUTES = [
+    '/create', 
+    '/random', 
+    '/samples', 
+    '/saved', 
+    '/ai-generator', 
+    '/robotic-resume',
+    '/resume/type-selection',
+    '/select-type',
+    '/resume-type-selection'
+  ];
+
   // Simple, robust client-side routing supporting both pathname and hash
   const getInitialRoute = (): string => {
     const hash = window.location.hash.replace('#', '');
-    if (hash && ['/create', '/random', '/samples', '/saved', '/ai-generator', '/robotic-resume'].includes(hash)) {
+    if (hash && VALID_ROUTES.includes(hash)) {
       return hash;
     }
     const path = window.location.pathname;
-    if (['/create', '/random', '/samples', '/saved', '/ai-generator', '/robotic-resume'].includes(path)) {
+    if (VALID_ROUTES.includes(path)) {
       return path;
     }
     return '/';
@@ -40,6 +54,7 @@ export default function App() {
   const [savedCount, setSavedCount] = useState<number>(0);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState<boolean>(false);
   const [reviewTrigger, setReviewTrigger] = useState<UserReview['actionTrigger']>('cv_download');
+  const [aiGeneratorProfession, setAiGeneratorProfession] = useState<string | undefined>(undefined);
 
   // Listen for automatic review prompt events from CV generator and export triggers
   useEffect(() => {
@@ -111,6 +126,24 @@ export default function App() {
     navigateTo('/create');
   };
 
+  // Resume Type Selection handler
+  const handleSelectResumeType = (item: ResumeTypeItem) => {
+    const resolution = resolveResumeRoute(item);
+    if (resolution.type === 'dedicated') {
+      navigateTo(resolution.route);
+    } else {
+      setAiGeneratorProfession(resolution.profession);
+      navigateTo('/ai-generator');
+    }
+  };
+
+  const handleSelectCustomProfession = (profession: string) => {
+    setAiGeneratorProfession(profession);
+    navigateTo('/ai-generator');
+  };
+
+  const isSelectionRoute = ['/resume/type-selection', '/select-type', '/resume-type-selection'].includes(currentRoute);
+
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 selection:bg-indigo-500 selection:text-white">
       {/* Top Navigation */}
@@ -129,6 +162,14 @@ export default function App() {
         />
       )}
 
+      {isSelectionRoute && (
+        <ResumeTypeSelectionPage 
+          onNavigate={navigateTo}
+          onSelectResumeType={handleSelectResumeType}
+          onSelectCustomProfession={handleSelectCustomProfession}
+        />
+      )}
+
       {currentRoute === '/robotic-resume' && (
         <RoboticResumePage 
           onEditCv={handleEditCvInBuilder}
@@ -140,6 +181,7 @@ export default function App() {
         <AiGeneratorPage 
           onEditCv={handleEditCvInBuilder}
           onNavigate={navigateTo}
+          initialProfession={aiGeneratorProfession}
         />
       )}
 

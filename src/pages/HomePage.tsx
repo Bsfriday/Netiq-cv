@@ -46,7 +46,7 @@ export const HomePage: React.FC<HomePageProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-5xl">
         {/* OPTION 1: AI Resume Generator */}
         <div 
-          onClick={() => onNavigate('/ai-generator')}
+          onClick={() => onNavigate('/resume/type-selection')}
           id="card-ai-generator"
           className="group cursor-pointer p-6 sm:p-8 rounded-3xl bg-white border border-blue-200/90 shadow-[0_10px_30px_-10px_rgba(37,99,235,0.2),0_4px_6px_-2px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_40px_-10px_rgba(37,99,235,0.35)] hover:border-blue-400 hover:-translate-y-1.5 transition-all duration-200 flex flex-col items-start relative overflow-hidden"
         >
@@ -74,13 +74,13 @@ export const HomePage: React.FC<HomePageProps> = ({
             type="button"
             onClick={(e) => {
               e.stopPropagation();
-              onNavigate('/ai-generator');
+              onNavigate('/resume/type-selection');
             }}
             className="mt-auto w-full py-3.5 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-2xl font-bold text-xs sm:text-sm shadow-md shadow-blue-600/25 transition-all flex items-center justify-center gap-1.5"
             id="btn-ai-generator-action"
           >
             <Sparkles className="w-4 h-4" />
-            <span>Generate with AI</span>
+            <span>Generate Resume with AI</span>
             <ArrowRight className="w-4 h-4 ml-0.5 group-hover:translate-x-1 transition-transform" />
           </button>
         </div>

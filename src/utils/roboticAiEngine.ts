@@ -3,7 +3,9 @@ import {
   AtsScoreBreakdown, 
   JobMatchResult, 
   RoboticExperienceItem,
-  RoboticSkill 
+  RoboticSkill,
+  RoboticCertificationItem,
+  RoboticEducationItem
 } from '../types/roboticResume';
 import { ResumeData } from '../types/cv';
 import { findRoleDefinition, ROBOTIC_ACTION_VERBS } from '../data/roboticResumeData';

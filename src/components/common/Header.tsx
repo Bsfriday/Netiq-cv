@@ -77,11 +77,11 @@ export const Header: React.FC<HeaderProps> = ({ currentRoute, onNavigate, savedC
       desc: 'AI-optimized resumes for modern roles'
     },
     {
-      route: '/ai-generator',
+      route: '/resume/type-selection',
       label: 'AI Resume Generator',
       icon: Sparkles,
       badge: 'AI',
-      desc: 'Tailored by country, role & experience'
+      desc: 'Tailored by profession, country & metrics'
     },
     {
       route: '/create',
@@ -166,9 +166,9 @@ export const Header: React.FC<HeaderProps> = ({ currentRoute, onNavigate, savedC
           </button>
 
           <button
-            onClick={() => onNavigate('/ai-generator')}
+            onClick={() => onNavigate('/resume/type-selection')}
             className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all ${
-              currentRoute === '/ai-generator' 
+              (currentRoute === '/ai-generator' || currentRoute === '/resume/type-selection' || currentRoute === '/select-type')
                 ? 'bg-blue-50 text-blue-700 border border-blue-200/80 shadow-xs' 
                 : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'
             }`}

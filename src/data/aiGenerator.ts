@@ -460,6 +460,146 @@ export const POPULAR_OCCUPATIONS: OccupationOption[] = [
       { name: 'Google for Education Certified Educator', issuer: 'Google for Education' }
     ],
     tools: ['Canvas LMS', 'Google Classroom', 'Kahoot!', 'Nearpod', 'PowerSchool', 'Edpuzzle']
+  },
+  {
+    id: 'biomedical-engineer',
+    title: 'Biomedical Engineer',
+    category: 'Engineering',
+    defaultTemplate: 'modern',
+    defaultAccent: '#0284c7',
+    skills: [
+      { name: 'Biomedical Device Prototyping', level: 'Expert', category: 'Engineering' },
+      { name: 'FDA 510(k) & ISO 13485 Compliance', level: 'Advanced', category: 'Regulatory' },
+      { name: 'Bio-Signal Processing (MATLAB)', level: 'Expert', category: 'Signals' },
+      { name: 'Biomechanics & Biomaterials', level: 'Advanced', category: 'R&D' },
+      { name: 'SolidWorks 3D CAD Modeling', level: 'Expert', category: 'Design' },
+      { name: 'Clinical Verification & Validation (V&V)', level: 'Advanced', category: 'Quality' },
+      { name: 'Physiological Sensor Integration', level: 'Intermediate', category: 'Electronics' }
+    ],
+    certifications: [
+      { name: 'Certified Biomedical Auditor (CBA)', issuer: 'American Society for Quality (ASQ)' },
+      { name: 'Regulatory Affairs Certification (RAC)', issuer: 'RAPS' }
+    ],
+    tools: ['MATLAB', 'SolidWorks', 'LabVIEW', 'ANSYS FEA', 'Python', 'Minitab']
+  },
+  {
+    id: 'mechanical-mechatronics-engineer',
+    title: 'Mechanical & Mechatronics Engineer',
+    category: 'Engineering',
+    defaultTemplate: 'modern',
+    defaultAccent: '#3b82f6',
+    skills: [
+      { name: 'Electro-Mechanical Systems Design', level: 'Expert', category: 'Design' },
+      { name: 'Finite Element Analysis (FEA)', level: 'Advanced', category: 'Simulation' },
+      { name: 'Robotic Actuators & Control Systems', level: 'Expert', category: 'Robotics' },
+      { name: 'Thermal & Fluid Dynamics Analysis', level: 'Advanced', category: 'Physics' },
+      { name: 'DFM / DFA (Design for Manufacturing)', level: 'Expert', category: 'Manufacturing' },
+      { name: 'Embedded C/C++ & PLC Programming', level: 'Intermediate', category: 'Embedded' }
+    ],
+    certifications: [
+      { name: 'Certified SolidWorks Professional (CSWP)', issuer: 'Dassault Systèmes' },
+      { name: 'Six Sigma Green Belt (CSSGB)', issuer: 'ASQ' }
+    ],
+    tools: ['SolidWorks', 'ANSYS', 'AutoCAD', 'MATLAB/Simulink', 'Arduino', 'LabVIEW']
+  },
+  {
+    id: 'aerospace-systems-engineer',
+    title: 'Aerospace Systems Engineer',
+    category: 'Engineering',
+    defaultTemplate: 'executive',
+    defaultAccent: '#1e3a8a',
+    skills: [
+      { name: 'Avionics & Telemetry Systems', level: 'Expert', category: 'Avionics' },
+      { name: 'Propulsion Thermodynamics', level: 'Advanced', category: 'Propulsion' },
+      { name: 'Flight Dynamics & Control Theory', level: 'Expert', category: 'Controls' },
+      { name: 'DO-178C / DO-254 Aerospace Compliance', level: 'Advanced', category: 'Compliance' },
+      { name: 'Aerodynamic CFD Simulations', level: 'Expert', category: 'Simulation' },
+      { name: 'System Safety & Fault Tree Analysis', level: 'Advanced', category: 'Reliability' }
+    ],
+    certifications: [
+      { name: 'INCOSE Certified Systems Engineering Professional (CSEP)', issuer: 'INCOSE' },
+      { name: 'AIAA Professional Member', issuer: 'AIAA' }
+    ],
+    tools: ['Simulink', 'ANSYS Fluent', 'STK (Systems Tool Kit)', 'CATIA', 'Python', 'DOORS']
+  },
+  {
+    id: 'renewable-energy-specialist',
+    title: 'Renewable Energy Specialist',
+    category: 'Engineering',
+    defaultTemplate: 'modern',
+    defaultAccent: '#059669',
+    skills: [
+      { name: 'Solar PV & Wind Resource Modeling', level: 'Expert', category: 'CleanTech' },
+      { name: 'Grid Interconnection & BESS Storage', level: 'Advanced', category: 'Power' },
+      { name: 'Energy Yield Assessment (PVsyst)', level: 'Expert', category: 'Simulation' },
+      { name: 'Environmental Impact & ESG Auditing', level: 'Advanced', category: 'ESG' },
+      { name: 'Lifecycle Carbon Accounting', level: 'Intermediate', category: 'Sustainability' }
+    ],
+    certifications: [
+      { name: 'NABCEP PV Installation Professional', issuer: 'NABCEP' },
+      { name: 'Certified Energy Manager (CEM)', issuer: 'AEE' }
+    ],
+    tools: ['PVsyst', 'HOMER Pro', 'AutoCAD', 'SAM (System Advisor Model)', 'ArcGIS', 'Excel']
+  },
+  {
+    id: 'executive-director',
+    title: 'Executive Director & Chief of Staff',
+    category: 'Executive & Leadership',
+    defaultTemplate: 'executive',
+    defaultAccent: '#0f172a',
+    skills: [
+      { name: 'Enterprise Strategy & Vision Formulation', level: 'Expert', category: 'Strategy' },
+      { name: 'Multi-Million P&L Financial Management', level: 'Expert', category: 'Finance' },
+      { name: 'Board Governance & Investor Relations', level: 'Expert', category: 'Governance' },
+      { name: 'Mergers & Acquisitions Integration', level: 'Advanced', category: 'Operations' },
+      { name: 'Executive Team Mentorship & Talent', level: 'Expert', category: 'Leadership' },
+      { name: 'Organizational Transformation', level: 'Expert', category: 'Scaling' }
+    ],
+    certifications: [
+      { name: 'Executive Leadership Program', issuer: 'Harvard Business School' },
+      { name: 'Chartered Director (C.Dir)', issuer: 'Institute of Directors' }
+    ],
+    tools: ['Workday', 'Salesforce CRM', 'Tableau', 'NetSuite', 'BoardEffect', 'Power BI']
+  },
+  {
+    id: 'clinical-research-coordinator',
+    title: 'Clinical Research Coordinator',
+    category: 'Healthcare',
+    defaultTemplate: 'classic',
+    defaultAccent: '#0284c7',
+    skills: [
+      { name: 'Good Clinical Practice (GCP) Compliance', level: 'Expert', category: 'Ethics' },
+      { name: 'IRB Protocol Submissions & Consent', level: 'Expert', category: 'Regulatory' },
+      { name: 'Patient Recruitment & Retention', level: 'Expert', category: 'Clinical' },
+      { name: 'Electronic Data Capture (Medidata Rave, REDCap)', level: 'Expert', category: 'Systems' },
+      { name: 'Adverse Event (AE/SAE) Reporting', level: 'Advanced', category: 'Safety' },
+      { name: 'Biological Specimen Management', level: 'Advanced', category: 'Laboratory' }
+    ],
+    certifications: [
+      { name: 'Certified Clinical Research Coordinator (CCRC)', issuer: 'ACRP' },
+      { name: 'CITI Human Subjects Research & GCP Certified', issuer: 'CITI Program' }
+    ],
+    tools: ['REDCap', 'Medidata Rave', 'Epic Research', 'OnCore CTMS', 'Excel', 'Veeva Vault']
+  },
+  {
+    id: 'supply-chain-specialist',
+    title: 'Supply Chain & Logistics Specialist',
+    category: 'Management',
+    defaultTemplate: 'compact',
+    defaultAccent: '#475569',
+    skills: [
+      { name: 'Global Freight & Customs Management', level: 'Expert', category: 'Logistics' },
+      { name: 'Vendor Procurement & Contract Negotiation', level: 'Expert', category: 'Procurement' },
+      { name: 'Inventory Optimization & JIT Modeling', level: 'Advanced', category: 'Inventory' },
+      { name: 'Warehouse Management Systems (WMS)', level: 'Expert', category: 'Systems' },
+      { name: 'Supply Chain Risk Mitigation', level: 'Advanced', category: 'Risk' },
+      { name: 'Total Cost of Ownership (TCO) Reduction', level: 'Advanced', category: 'Finance' }
+    ],
+    certifications: [
+      { name: 'Certified in Planning and Inventory Management (CPIM)', issuer: 'ASCM / APICS' },
+      { name: 'Certified Supply Chain Professional (CSCP)', issuer: 'APICS' }
+    ],
+    tools: ['SAP S/4HANA', 'Oracle SCM', 'Manhattan WMS', 'Tableau', 'Microsoft Excel', 'JDA']
   }
 ];
 
