@@ -30,6 +30,8 @@ import com.example.netiqcv.model.ResumeData
 fun HomeScreen(
     savedCount: Int,
     onNavigateToAi: () -> Unit,
+    onNavigateToRobotic: () -> Unit,
+    onNavigateToResumeTypes: () -> Unit,
     onNavigateToBuilder: () -> Unit,
     onNavigateToRandom: () -> Unit,
     onNavigateToSamples: () -> Unit,
@@ -106,52 +108,82 @@ fun HomeScreen(
             )
         }
 
-        // 3 Primary Action Cards
+        // Primary Action Cards
         Column(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            // Card 1: AI Resume Generator
+            // Card 1: Robotic & AI Tech Studio
+            MainFeatureCard(
+                tag = "card_robotic_studio",
+                badgeText = "ATS INTELLIGENCE",
+                badgeBg = Color(0xFFEEF2FF),
+                badgeColor = Color(0xFF4F46E5),
+                title = "Robotic & AI Tech Studio",
+                description = "ATS-optimized architecture for AI data annotators, prompt engineers, model evaluators, and modern tech roles with live keyword analysis.",
+                buttonText = "Open Robotic Studio",
+                buttonIcon = Icons.Default.SmartToy,
+                gradient = listOf(Color(0xFF4F46E5), Color(0xFF7C3AED)),
+                icon = Icons.Default.SmartToy,
+                onClick = onNavigateToRobotic
+            )
+
+            // Card 2: AI Resume Generator
             MainFeatureCard(
                 tag = "card_ai_generator",
                 badgeText = "SMART AI",
-                badgeBg = Color(0xFFEEF2FF),
-                badgeColor = Color(0xFF4F46E5),
+                badgeBg = Color(0xFFEFF6FF),
+                badgeColor = Color(0xFF2563EB),
                 title = "AI Resume Generator",
                 description = "Generate a targeted resume tailored to your country, age group, occupation, and employment status with smart localized metrics.",
                 buttonText = "Generate with AI",
                 buttonIcon = Icons.Default.Sparkles,
-                gradient = listOf(Color(0xFF4F46E5), Color(0xFF2563EB)),
+                gradient = listOf(Color(0xFF2563EB), Color(0xFF0284C7)),
                 icon = Icons.Default.AutoAwesome,
                 onClick = onNavigateToAi
             )
 
-            // Card 2: Create / Edit My CV
+            // Card 3: Create / Edit My CV
             MainFeatureCard(
                 tag = "card_create_my_cv",
                 badgeText = "STUDIO BUILDER",
-                badgeBg = Color(0xFFEFF6FF),
-                badgeColor = Color(0xFF2563EB),
+                badgeBg = Color(0xFFF0FDF4),
+                badgeColor = Color(0xFF059669),
                 title = "Create My CV",
                 description = "Build and personalize your resume step-by-step with real-time score analysis, section reordering, and PDF export.",
                 buttonText = "Open CV Builder",
                 buttonIcon = Icons.Default.AddCircle,
-                gradient = listOf(Color(0xFF2563EB), Color(0xFF0284C7)),
+                gradient = listOf(Color(0xFF059669), Color(0xFF0D9488)),
                 icon = Icons.Default.EditNote,
                 onClick = onNavigateToBuilder
             )
 
-            // Card 3: Generate Random CV
+            // Card 4: Explore 20+ Resume Types
+            MainFeatureCard(
+                tag = "card_explore_types",
+                badgeText = "CAREER DIRECTORY",
+                badgeBg = Color(0xFFF8FAFC),
+                badgeColor = Color(0xFF0284C7),
+                title = "Explore 20+ Resume Types",
+                description = "Browse specialized architectures across Engineering, Healthcare, Finance, Design, and Leadership with smart AI generation.",
+                buttonText = "Browse 20+ Careers",
+                buttonIcon = Icons.Default.WorkOutline,
+                gradient = listOf(Color(0xFF0284C7), Color(0xFF0369A1)),
+                icon = Icons.Default.WorkOutline,
+                onClick = onNavigateToResumeTypes
+            )
+
+            // Card 5: Generate Random CV
             MainFeatureCard(
                 tag = "card_generate_random",
                 badgeText = "INSTANT TEMPLATE",
-                badgeBg = Color(0xFFF0FDF4),
-                badgeColor = Color(0xFF059669),
+                badgeBg = Color(0xFFFFFBEB),
+                badgeColor = Color(0xFFD97706),
                 title = "Generate Random CV",
                 description = "Instantly spin up a realistic professional resume across technology, finance, healthcare, design, and more with one tap.",
                 buttonText = "Generate Random CV",
                 buttonIcon = Icons.Default.Shuffle,
-                gradient = listOf(Color(0xFF059669), Color(0xFF0D9488)),
+                gradient = listOf(Color(0xFFD97706), Color(0xFFB45309)),
                 icon = Icons.Default.Casino,
                 onClick = onNavigateToRandom
             )

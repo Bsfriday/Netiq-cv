@@ -53,6 +53,7 @@ class MainActivity : ComponentActivity() {
 
                 val savedResumes by viewModel.savedResumes.collectAsState()
                 val statusMsg by viewModel.statusMessage.collectAsState()
+                var prefilledProfessionForAi by remember { mutableStateOf<String?>(null) }
 
                 LaunchedEffect(statusMsg) {
                     statusMsg?.let {
@@ -124,7 +125,12 @@ class MainActivity : ComponentActivity() {
                         composable(ScreenRoute.HOME.route) {
                             HomeScreen(
                                 savedCount = savedResumes.size,
-                                onNavigateToAi = { navController.navigate(ScreenRoute.AI_GENERATOR.route) },
+                                onNavigateToAi = {
+                                    prefilledProfessionForAi = null
+                                    navController.navigate(ScreenRoute.AI_GENERATOR.route)
+                                },
+                                onNavigateToRobotic = { navController.navigate("robotic_resume") },
+                                onNavigateToResumeTypes = { navController.navigate("resume_types") },
                                 onNavigateToBuilder = { navController.navigate(ScreenRoute.CREATE.route) },
                                 onNavigateToRandom = { navController.navigate("random") },
                                 onNavigateToSamples = { navController.navigate(ScreenRoute.SAMPLES.route) },
@@ -141,7 +147,31 @@ class MainActivity : ComponentActivity() {
                                 viewModel = viewModel,
                                 onEditInBuilder = { cv ->
                                     navController.navigate(ScreenRoute.CREATE.route)
-                                }
+                                },
+                                initialProfession = prefilledProfessionForAi
+                            )
+                        }
+
+                        composable("robotic_resume") {
+                            RoboticResumeScreen(
+                                viewModel = viewModel,
+                                onEditInBuilder = { cv ->
+                                    navController.navigate(ScreenRoute.CREATE.route)
+                                },
+                                onBack = { navController.popBackStack() }
+                            )
+                        }
+
+                        composable("resume_types") {
+                            ResumeTypeSelectionScreen(
+                                onSelectDedicatedStudio = { id ->
+                                    navController.navigate("robotic_resume")
+                                },
+                                onSelectProfessionForAi = { profession ->
+                                    prefilledProfessionForAi = profession
+                                    navController.navigate(ScreenRoute.AI_GENERATOR.route)
+                                },
+                                onBack = { navController.popBackStack() }
                             )
                         }
 

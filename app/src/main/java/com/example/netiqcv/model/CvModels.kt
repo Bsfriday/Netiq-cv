@@ -119,6 +119,7 @@ data class ResumeData(
     val id: String = "",
     val title: String = "My Professional Resume",
     val industry: String = "Technology",
+    val country: String = "",
     val personalInfo: PersonalInfo = PersonalInfo(),
     val summary: String = "",
     val experience: List<ExperienceItem> = emptyList(),

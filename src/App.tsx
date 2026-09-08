@@ -5,7 +5,6 @@ import { DEFAULT_BLANK_CV } from './data/defaultCv';
 import { loadDraftFromStorage, getSavedResumesList } from './utils/storage';
 import { Header } from './components/common/Header';
 import { Footer } from './components/common/Footer';
-import { EmbeddedContent } from './components/common/EmbeddedContent';
 import { AdManager } from './components/common/AdManager';
 import { HomePage } from './pages/HomePage';
 import { RandomPage } from './pages/RandomPage';
@@ -250,11 +249,8 @@ export default function App() {
         />
       )}
 
-      {/* Centralized Advertisement Slot Manager */}
+      {/* Centralized Advertisement Slot Manager (Clean state, ready for new fresh ads) */}
       <AdManager />
-
-      {/* Embedded Partner Content */}
-      <EmbeddedContent />
 
       {/* Persistent Global Footer */}
       <Footer />

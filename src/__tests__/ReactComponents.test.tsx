@@ -4,10 +4,7 @@ import { render, screen, fireEvent, act } from '@testing-library/react';
 import { Header } from '../components/common/Header';
 import { Footer } from '../components/common/Footer';
 import { AdSlot } from '../components/common/AdSlot';
-import { Quge5AdSlot } from '../components/common/Quge5AdSlot';
-import { EffectiveCpmAdSlot } from '../components/common/EffectiveCpmAdSlot';
 import { AdManager } from '../components/common/AdManager';
-import { EmbeddedContent } from '../components/common/EmbeddedContent';
 import { CvRenderer } from '../components/cv-templates/CvRenderer';
 import { DEFAULT_BLANK_CV } from '../data/defaultCv';
 import { SAMPLE_CVS } from '../data/sampleCvs';
@@ -30,7 +27,7 @@ describe('React Component Rendering Tests', () => {
 
     const aiGenBtn = screen.getByRole('button', { name: /AI Generator/i });
     fireEvent.click(aiGenBtn);
-    expect(handleNavigate).toHaveBeenCalledWith('/ai-generator');
+    expect(handleNavigate).toHaveBeenCalledWith('/resume/type-selection');
 
     const randomBtn = screen.getByRole('button', { name: /Random CV/i });
     fireEvent.click(randomBtn);
@@ -47,41 +44,6 @@ describe('React Component Rendering Tests', () => {
     expect(screen.getByText('Drafts Auto-Saved Locally in Browser')).toBeInTheDocument();
     expect(screen.getAllByText(/CreatIQ Products/i).length).toBeGreaterThan(0);
     expect(screen.getByText('A4 Vector PDF Ready')).toBeInTheDocument();
-  });
-
-  it('renders EmbeddedContent section with exact EMBED_URL iframe', () => {
-    render(<EmbeddedContent />);
-    const iframe = document.querySelector('#embedded-content-frame') as HTMLIFrameElement;
-    expect(iframe).toBeInTheDocument();
-    expect(iframe.src).toBe('https://omg10.com/4/5700091');
-    expect(iframe.getAttribute('title')).toBe('Embedded Content');
-    expect(iframe.style.minHeight).toBe('380px');
-  });
-
-  it('renders EffectiveCpmAdSlot component with designated container ID and loads script when active', () => {
-    const { unmount, rerender } = render(<EffectiveCpmAdSlot isActive={false} />);
-    expect(document.querySelector('#container-169d659922ca3cb3f03ee17ab8b9c4cd')).toBeNull();
-
-    rerender(<EffectiveCpmAdSlot isActive={true} />);
-    const container = document.querySelector('#container-169d659922ca3cb3f03ee17ab8b9c4cd');
-    expect(container).toBeInTheDocument();
-
-    const script = document.querySelector('script[src="https://pl30943467.effectivecpmnetwork.com/169d659922ca3cb3f03ee17ab8b9c4cd/invoke.js"]');
-    expect(script).toBeInTheDocument();
-    expect(script?.getAttribute('data-cfasync')).toBe('false');
-    unmount();
-  });
-
-  it('renders Quge5AdSlot component with isolated iframe when active', () => {
-    const { unmount, rerender } = render(<Quge5AdSlot isActive={false} />);
-    expect(document.querySelector('#quge5-isolated-frame')).toBeNull();
-
-    rerender(<Quge5AdSlot isActive={true} />);
-    const iframe = document.querySelector('#quge5-isolated-frame') as HTMLIFrameElement;
-    expect(iframe).toBeInTheDocument();
-    expect(iframe.srcdoc).toContain('https://quge5.com/88/tag.min.js');
-    expect(iframe.getAttribute('sandbox')).toContain('allow-scripts');
-    unmount();
   });
 
   it('renders CvRenderer correctly with candidate data in Modern template', () => {
@@ -158,34 +120,11 @@ describe('React Component Rendering Tests', () => {
     });
   });
 
-  it('handles AdManager schedule: initial 30s delay, then sequential 20s interval for ad slots', () => {
-    vi.useFakeTimers();
-    const { unmount } = render(<AdManager />);
-
-    // Initially neither ad slot is visible before 30 seconds
+  it('renders AdManager in clean state with no active ads ready for fresh slots', () => {
+    const { container } = render(<AdManager />);
+    expect(container.firstChild).toBeNull();
     expect(document.querySelector('#ad-slot-section-ad-slot-1')).toBeNull();
     expect(document.querySelector('#ad-slot-section-ad-slot-2')).toBeNull();
-
-    // Fast-forward 30 seconds -> Ad Slot 1 activates
-    act(() => {
-      vi.advanceTimersByTime(30000);
-    });
-
-    expect(document.querySelector('#ad-slot-section-ad-slot-1')).toBeInTheDocument();
-    expect(document.querySelector('#quge5-isolated-frame')).toBeInTheDocument();
-    expect(document.querySelector('#ad-slot-section-ad-slot-2')).toBeNull();
-
-    // Advance another 20 seconds (50s total) -> Ad Slot 2 activates
-    act(() => {
-      vi.advanceTimersByTime(20000);
-    });
-
-    expect(document.querySelector('#ad-slot-section-ad-slot-1')).toBeInTheDocument();
-    expect(document.querySelector('#ad-slot-section-ad-slot-2')).toBeInTheDocument();
-    expect(document.querySelector('#container-169d659922ca3cb3f03ee17ab8b9c4cd')).toBeInTheDocument();
-
-    unmount();
-    vi.useRealTimers();
   });
 
   it('handles AdSlot 5-second countdown and enables reliable user dismiss/close', () => {

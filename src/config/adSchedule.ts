@@ -15,8 +15,5 @@ export const AD_SCHEDULE: AdScheduleConfig = {
   initialDelay: 30000, // 30 seconds
   interval: 20000,     // 20 seconds
   closeCountdown: 5,   // 5 seconds
-  slots: [
-    'ad-slot-1', // Network 1: quge5.com
-    'ad-slot-2', // Network 2: Effective CPM Network
-  ] as const,
+  slots: [] as const,  // Fresh slate: ready for new domains and ad networks
 };

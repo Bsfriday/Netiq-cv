@@ -50,17 +50,28 @@ private val ACCENT_COLORS = listOf(
 @Composable
 fun AiGeneratorScreen(
     viewModel: CvViewModel,
-    onEditInBuilder: (ResumeData) -> Unit
+    onEditInBuilder: (ResumeData) -> Unit,
+    initialProfession: String? = null
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val generatedCv by viewModel.aiGeneratedCv.collectAsState()
     val isGenerating by viewModel.isAiGenerating.collectAsState()
 
+    val matchedOcc = remember(initialProfession) {
+        initialProfession?.let { prof ->
+            CountriesAndOccupations.OCCUPATIONS.find { it.title.equals(prof, ignoreCase = true) }
+        }
+    }
+
     var selectedCountry by remember { mutableStateOf("United States") }
     var selectedAgeGroup by remember { mutableStateOf("23-29") }
-    var selectedOccupation by remember { mutableStateOf("Software Engineer") }
-    var customOccupation by remember { mutableStateOf("") }
+    var selectedOccupation by remember(initialProfession) {
+        mutableStateOf(matchedOcc?.title ?: if (initialProfession.isNullOrBlank()) "Software Engineer" else "Custom...")
+    }
+    var customOccupation by remember(initialProfession) {
+        mutableStateOf(if (matchedOcc == null && !initialProfession.isNullOrBlank()) initialProfession else "")
+    }
     var selectedEmploymentStatus by remember { mutableStateOf("employed") }
 
     var selectedTab by remember { mutableIntStateOf(0) } // 0: Form & Settings, 1: Live Preview

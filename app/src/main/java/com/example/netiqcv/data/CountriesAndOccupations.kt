@@ -480,6 +480,7 @@ object CountriesAndOccupations {
             id = "ai-cv-${System.currentTimeMillis()}-${Random.nextInt(1000, 9999)}",
             title = "$fullName — $actualTitle (${country.name})",
             industry = occ.category,
+            country = country.name,
             personalInfo = PersonalInfo(
                 fullName = fullName,
                 jobTitle = actualTitle,
